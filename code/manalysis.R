@@ -1,13 +1,24 @@
-#Retrieve data
-setwd("C:/Users/bankh/OneDrive/Documents/Homework/!!!SEALS RESEARCH")
+# Anthropogenic noise disturbance on harbor seals
+
+###########################################################################
+# Marina GLM analysis
+###########################################################################
+
+# Set working directory here
+setwd("C:/Users/bankh/My_Repos/harbor-seal/data")
+
+# Retrieve data
 m.data<-read.csv("m.data.csv")
 m.tide<-read.csv("m.tide.csv")
 
-#Get packages
+# Load packages
 require(lme4)
 require(ggplot2)
 require(performance) #for check_collinearity()
 require(MuMIn)
+
+###########################################################################
+# PART 1: Gambit of the group ---------------------------------------------
 
 #Format y-variable
 head(m.data)
