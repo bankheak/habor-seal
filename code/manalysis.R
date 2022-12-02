@@ -1,76 +1,73 @@
 # Anthropogenic noise disturbance on harbor seals
 
 ###########################################################################
-# Marina GLM analysis
+# Waterfront-Marina GLM analysis
 ###########################################################################
 
 # Set working directory here
-setwd("C:/Users/bankh/My_Repos/harbor-seal/data")
+setwd("C:/Users/bankh/My_Repos/habor-seal/data")
 
 # Retrieve data
 m.data<-read.csv("m.data.csv")
-m.tide<-read.csv("m.tide.csv")
+w.data<-read.csv("w.data.csv")
 
 # Load packages
 require(lme4)
 require(ggplot2)
 require(performance) #for check_collinearity()
 require(MuMIn)
+require(MASS) #for glm.nb()
 
 ###########################################################################
-# PART 1: Gambit of the group ---------------------------------------------
+# PART 1: Check Location Significance at Waterfront ---------------------------------------------
 
-#Format y-variable
-head(m.data)
-colnames(m.data)[1] = "seals"
-colnames(m.tide)[1] = "seals"
+head(w.data)
 
-#Check distribution
-ggplot(m.data, aes(x=seals)) + 
+# Check t-test assumptions
+## Is noise normal?
+hist(w.data$noise[w.data$location == 1])
+hist(w.data$noise[w.data$location == 2])
+### Both are normal
+
+## Equal variance?
+var(w.data$noise[w.data$location == 1])
+var(w.data$noise[w.data$location == 2])
+### Equal variance
+
+# Run t-test
+t.test(w.data$noise[w.data$location == 1], w.data$noise[w.data$location == 2])
+## Not significantly different
+## Move on-to merging data sets
+
+###########################################################################
+# PART 2: Combine Waterfront and Marina Models ---------------------------------------------
+
+# Merge data
+full.data<-merge(w.data,m.data,all = T)
+
+# Check distribution
+ggplot(full.data, aes(x=seals)) + 
   geom_histogram(aes(y=..density..), colour="black", fill="white")+
   geom_density()+stat_density(alpha=.2,adjust = 1, fill="#FF6666")+xlab("Number of Seals Hauled-out")+ylab("Density")+theme(panel.background = element_blank())
 
-#Check if good for Poisson
-x<-m.data$seals
-dispersion_test <- function(x) 
-{
-  res <- 1-2 * abs((1 - pchisq((sum((x - mean(x))^2)/mean(x)), length(x) - 1))-0.5)
-  
-  cat("Dispersion test of count data:\n",
-      length(x), " data points.\n",
-      "Mean: ",mean(x),"\n",
-      "Variance: ",var(x),"\n",
-      "Probability of being drawn from Poisson distribution: ", 
-      round(res, 3),"\n", sep = "")
-  
-  invisible(res)
-}
-#Not good, try quasipoisson to correct for overdispersion
+# Check GLM
+model1 <- glm.nb(seals ~ scale(j.date) + tide + time + site*noise + month, data = full.data)
+summary(model1) #take out j.date,tide and time
+model2 <- glm.nb(seals ~ scale(j.date) + site*noise + month, data = full.data)
+summary(model2) #everything is significant... this is the best model
 
-#Check Residuals
-#Noise
-res1 <- resid(mbm3)
-plot(m.data$noise, res1)
-abline(0,0)
-#Julian date
-plot(m.data$j.date, res1)
-abline(0,0)
-#Tide
-plot(m.data$tide, res1)
-abline(0,0)
-#Time
-plot(m.data$time, res1)
-abline(0,0)
 
-#Check fit
-plot(m.data$seals ~ m.data$noise)
 
-#Check for collinarity
-plot(m.data$j.date ~ m.data$tide)
-check_collinearity(mbm3) #doesn't exist yet 
-#Not an issue
 
-#GLMM Building Models
+
+
+
+
+
+
+
+
+#GLM Building Models
 mbm1 <- glm(seals ~ noise+scale(j.date)+tide+time,data = m.data,family = quasipoisson(link='log'))
 summary(mbm1) #take out j.date,tide and time
 mbm2 <- glm(seals ~ noise, data = m.data,family = quasipoisson(link='log'))
