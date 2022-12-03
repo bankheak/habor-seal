@@ -1,0 +1,180 @@
+---
+title: "Harbor Seal GLM Analysis"
+author: Kyra Bankhead
+output: html_document
+date: "2022-12-03"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Anthropogenic noise disturbance on harbor seals
+## Waterfront-Marina GLM analysis
+
+In this markdown I will:
+1: Check whether the two waterfront locations have significantly different noise levels.
+2: Combine the Waterfront and Marina Models and find the best distribution to use for GLMs.
+3: Run GLMS and AICs to find the most appropriate model and predictors.
+4: Create visualization graphs for each site.
+
+```{r setup}
+knitr::opts_chunk$set(include = FALSE)
+# Set working directory here
+setwd("C:/Users/bankh/My_Repos/habor-seal/data")
+
+# Retrieve data
+m.data<-read.csv("m.data.csv")
+w.data<-read.csv("w.data.csv")
+
+# Load packages
+require(lme4)
+require(ggplot2)
+require(performance) #for check_collinearity()
+require(MuMIn) # For dredge function
+require(MASS) #for glm.nb()
+```
+
+## Check waterfront location significance
+
+You can also embed plots, for example:
+
+```{r t-test, echo=TRUE}
+# Check t-test assumptions
+## Is noise normal?
+hist(w.data$noise[w.data$location == 1])
+hist(w.data$noise[w.data$location == 2])
+### Both are normal
+
+## Equal variance?
+var(w.data$noise[w.data$location == 1])
+var(w.data$noise[w.data$location == 2])
+### Equal variance
+
+# Run t-test
+t.test(w.data$noise[w.data$location == 1], w.data$noise[w.data$location == 2])
+## Not significantly different
+## Move on-to merging data sets
+```
+
+Now that I know the two waterfront locations don't have significantly different noise levels, I can merge the two locations by:
+- Summing the number of seals hauled-out
+- Combining the average noise level
+
+```{r Combine locations, include=FALSE}
+# Combine location avg noise and total seals within dates
+new.w.data<-read.csv("new.w.data.csv")
+```
+
+## Merge Waterfront and Marina Models 
+
+```{r merge data, echo=TRUE}
+# Fix date
+new.w.data$date<-as.Date(as.character(new.w.data$date),format = "%m/%d/%Y")
+m.data$date<-as.Date(as.character(m.data$date),format = "%m/%d/%Y")
+
+# Merge data
+full.data<-merge(new.w.data,m.data,all = T)
+summary(full.data)
+full.data$time<-as.numeric(full.data$time)
+full.data$month<-as.numeric(full.data$month)
+```
+
+### Check for collinearity
+
+```{r cor, echo=TRUE}
+# Run pairwise cor between all independent variables
+## Cut-off is +/- 0.7
+cor.matrix<-cor(full.data[,c(2:4,6:7)]) 
+# Keep only large correlations in the same model
+cor.matrix[abs(cor.matrix)< 0.7]<-NA
+cor.matrix
+## No colilinearity
+```
+
+### Check Histogram
+
+```{r hist, echo=FALSE}
+# Check distribution
+ggplot(full.data, aes(x=seals)) + 
+  geom_histogram(aes(y=..density..), colour="black", fill="white")+
+  geom_density()+stat_density(alpha=.2,adjust = 1, fill="#FF6666")+xlab("Number of Seals Hauled-out")+ylab("Density")+theme(panel.background = element_blank())
+## Negative binomial would be the best fit
+```
+
+A negative binomial model would fit this data best.
+
+## Create GLMs and find best model
+
+```{r AICs, echo=TRUE}
+# Create presence column
+full.data$Presence<- ifelse(full.data$seals == 0, 0, 1)
+# Change na.action
+options(na.action = "na.fail")
+# Fit model with all uncorrelated parameters
+summary(all.parms<-glm(Presence~scale(j.date) + tide + time + site + noise + month, data = full.data, family = binomial))
+# The dredge function fits all combinations
+# of the variables in the all.parms model fit above
+results<-dredge(all.parms)
+# Grab best model based on lowest AICc
+subset(results, delta == 0)
+## Looks like month, noise, and site
+```
+
+Looks like the best model will contain month, noise, and site as predictors.
+
+To test whether noise affects the number of seals hauled-out by site, I will insert an interaction between noise level and site.
+
+```{r GLM}
+model<- glm.nb(seals ~ site*noise + month, data = full.data)
+summary(model) 
+```
+
+Everything is significant.
+
+## Graphs
+
+### Number of Seals Hauled-out vs. Noise Level
+
+#### Waterfront
+
+```{r Waterfront sealsvnoise, echo=FALSE}
+## Waterfront
+ggplot(new.w.data, aes(noise,seals))+geom_point()+geom_smooth(method = "gam", formula =seals~s(noise))+
+  stat_smooth(method="gam",colour="black")+xlab("Average Noise Level (dB)")+ylab("Number of Seals Hauled-out")+
+  coord_trans(x = "log10")+theme(panel.background = element_blank())
+
+```
+
+#### Marina
+
+```{r Marina sealsvnoise, echo=FALSE}
+## Marina
+ggplot(m.data, aes(noise,seals))+geom_point()+geom_smooth(method = "gam", formula =seals~s(noise))+
+  stat_smooth(method="gam",colour="black")+xlab("Average Noise Level (dB)")+ylab("Number of Seals Hauled-out")+
+  coord_trans(x = "log10")+theme(panel.background = element_blank())
+```
+
+### Number of Seals Hauled-out vs. Month
+
+#### Waterfront
+
+```{r waterfront sealsvmonth, echo=FALSE}
+## Waterfront
+p<-ggplot(new.w.data, aes(x=month,y =seals,group=month))
+p+geom_boxplot(fill="black", alpha=0.2)+
+  scale_x_discrete(limits=c("1","2","3","4","5","6"))+
+  xlab("Month")+ylab("Number of Seals")+theme(panel.background = element_blank())
+
+```
+
+#### Marina
+
+```{r marina sealsvmonth, echo=FALSE}
+## Marina
+p<-ggplot(m.data, aes(x=month,y =seals,group=month))
+p+geom_boxplot(fill="black", alpha=0.2)+
+  scale_x_discrete(limits=c("Jun","Jul","Aug","Sept","Oct","Nov"))+
+  xlab("Month")+ylab("Number of Seals")+theme(panel.background = element_blank())
+```
+
