@@ -70,29 +70,68 @@ ggplot(full.data, aes(x=seals)) +
 ## Negative binomial would be the best fit
 
 ###########################################################################
-# PART 3: Run GLM and AICs---------------------------------------------
-
-# Create presence column
-full.data$Presence<- ifelse(full.data$seals == 0, 0, 1)
-
-# Change na.action
-options(na.action = "na.fail")
-
-# Fit model with all uncorrelated parameters
-summary(all.parms<-glm(Presence~scale(j.date) + tide + time + site + noise + month, data = full.data, family = binomial))
-
-# The dredge function fits all combinations
-# of the variables in the all.parms model fit above
-results<-dredge(all.parms)
-
-# Grab best model based on lowest AICc
-subset(results, delta == 0)
-## Looks like month, noise, and site
+# PART 3: Run GLM and AICc---------------------------------------------
 
 # Check GLM
-model<- glm.nb(seals ~ site*noise + month, data = full.data)
-summary(model) #everything is significant
+model1<- glm.nb(seals ~ 1, data = full.data)
+summary(model1) 
+model2<- glm.nb(seals ~ site*noise + month + tide + time, data = full.data)
+summary(model2) 
+model3<- glm.nb(seals ~ site*noise + month + time, data = full.data)
+summary(model3) 
+model4<- glm.nb(seals ~ site*noise + month, data = full.data)
+summary(model4) 
 
+models<-list(model1, model2, model3, model4)
+
+## Calculate AICc with glm of models
+n = length(models[[1]]$fitted)
+AIC.table = c() # Make a place for summary table
+for(i in 1:4) {
+  AIC.table<-
+      rbind(AIC.table, c(n, models[[i]]$rank + 1, models[[i]]$aic + (2*K*(K+1))/(n-K-1)))
+}
+colnames(AIC.table)<- c("N","df","AICc")
+rownames(AIC.table)<- c("seals ~ 1",
+                        "seals ~ site*noise + month + tide + time",
+                        "seals ~ site*noise + month + time",
+                        "seals ~ site*noise + month")
+
+### Model 1
+aic = model1$aic
+n = length(model1$fitted)
+K = model1$rank + 1
+AIC.c <- aic + (2*K*(K+1))/(n-K-1)
+mod1.sel = c(n,K,AIC.c)
+
+### Model 2
+aic = model2$aic
+n = length(model2$fitted)
+K = model2$rank + 1
+AIC.c <- aic + (2*K*(K+1))/(n-K-1)
+mod2.sel = c(n,K,AIC.c)
+
+### Model 3
+aic = model3$aic
+n = length(model3$fitted)
+K = model3$rank + 1
+AIC.c <- aic + (2*K*(K+1))/(n-K-1)
+mod3.sel = c(n,K,AIC.c)
+
+### Model 4
+aic = model4$aic
+n = length(model4$fitted)
+K = model4$rank + 1
+AIC.c <- aic + (2*K*(K+1))/(n-K-1)
+mod4.sel = c(n,K,AIC.c)
+
+## Combine AICc for models
+AIC.table<-rbind(mod1.sel,mod2.sel,mod3.sel,mod4.sel)
+colnames(AIC.table)<- c("N","df","AICc")
+rownames(AIC.table)<- c("seals ~ 1",
+                        "seals ~ site*noise + month + tide + time",
+                        "seals ~ site*noise + month + time",
+                        "seals ~ site*noise + month")
 
 ###########################################################################
 # PART 4: Run Diagnostics---------------------------------------------
