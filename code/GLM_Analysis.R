@@ -85,53 +85,7 @@ summary(model4)
 models<-list(model1, model2, model3, model4)
 
 ## Calculate AICc with glm of models
-n = length(models[[1]]$fitted)
-AIC.table = c() # Make a place for summary table
-for(i in 1:4) {
-  AIC.table<-
-      rbind(AIC.table, c(n, models[[i]]$rank + 1, models[[i]]$aic + (2*K*(K+1))/(n-K-1)))
-}
-colnames(AIC.table)<- c("N","df","AICc")
-rownames(AIC.table)<- c("seals ~ 1",
-                        "seals ~ site*noise + month + tide + time",
-                        "seals ~ site*noise + month + time",
-                        "seals ~ site*noise + month")
-
-### Model 1
-aic = model1$aic
-n = length(model1$fitted)
-K = model1$rank + 1
-AIC.c <- aic + (2*K*(K+1))/(n-K-1)
-mod1.sel = c(n,K,AIC.c)
-
-### Model 2
-aic = model2$aic
-n = length(model2$fitted)
-K = model2$rank + 1
-AIC.c <- aic + (2*K*(K+1))/(n-K-1)
-mod2.sel = c(n,K,AIC.c)
-
-### Model 3
-aic = model3$aic
-n = length(model3$fitted)
-K = model3$rank + 1
-AIC.c <- aic + (2*K*(K+1))/(n-K-1)
-mod3.sel = c(n,K,AIC.c)
-
-### Model 4
-aic = model4$aic
-n = length(model4$fitted)
-K = model4$rank + 1
-AIC.c <- aic + (2*K*(K+1))/(n-K-1)
-mod4.sel = c(n,K,AIC.c)
-
-## Combine AICc for models
-AIC.table<-rbind(mod1.sel,mod2.sel,mod3.sel,mod4.sel)
-colnames(AIC.table)<- c("N","df","AICc")
-rownames(AIC.table)<- c("seals ~ 1",
-                        "seals ~ site*noise + month + tide + time",
-                        "seals ~ site*noise + month + time",
-                        "seals ~ site*noise + month")
+AICc(models) # Looks like site*noise + month + time are the best predictors
 
 ###########################################################################
 # PART 4: Run Diagnostics---------------------------------------------

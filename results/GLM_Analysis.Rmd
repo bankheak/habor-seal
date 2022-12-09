@@ -106,28 +106,34 @@ A negative binomial model would fit this data best.
 
 ## Create GLMs and find best model
 
-```{r AICs, echo=TRUE}
-# Create presence column
-full.data$Presence<- ifelse(full.data$seals == 0, 0, 1)
-# Change na.action
-options(na.action = "na.fail")
-# Fit model with all uncorrelated parameters
-summary(all.parms<-glm(Presence~scale(j.date) + tide + time + site + noise + month, data = full.data, family = binomial))
-# The dredge function fits all combinations
-# of the variables in the all.parms model fit above
-results<-dredge(all.parms)
-# Grab best model based on lowest AICc
-subset(results, delta == 0)
-## Looks like month, noise, and site
+```{r models, echo=TRUE}
+model1<- glm.nb(seals ~ 1, data = full.data)
+summary(model1) 
+model2<- glm.nb(seals ~ site*noise + month + tide + time, data = full.data)
+summary(model2) 
+model3<- glm.nb(seals ~ site*noise + month + time, data = full.data)
+summary(model3) 
+model4<- glm.nb(seals ~ site*noise + month, data = full.data)
+summary(model4) 
 ```
 
-Looks like the best model will contain month, noise, and site as predictors.
+Now let's look at AICc
+
+```{r AICc, echo=FALSE}
+models<-list(model1, model2, model3, model4)
+
+## Calculate AICc with glm of models
+AICc(models) # Looks like site*noise + month + time are the best predictors
+```
+
+
+Looks like the best model will contain month, noise, site and time as predictors.
 
 To test whether noise affects the number of seals hauled-out by site, I will insert an interaction between noise level and site.
 
 ```{r GLM, echo=TRUE}
-model<- glm.nb(seals ~ site*noise + month, data = full.data)
-summary(model) 
+model3<- glm.nb(seals ~ site*noise + month + time, data = full.data)
+summary(model3) 
 ```
 
 Everything is significant.
