@@ -6,19 +6,19 @@ date: "2022-12-03"
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(include = FALSE)
 ```
 
 # Anthropogenic noise disturbance on harbor seals
 ## Waterfront-Marina GLM analysis
 
 In this markdown I will:
-1: Check whether the two waterfront locations have significantly different noise levels.
-2: Combine the Waterfront and Marina Models and find the best distribution to use for GLMs.
-3: Run GLMS and AICs to find the most appropriate model and predictors.
-4: Create visualization graphs for each site.
+1.Check whether the two waterfront locations have significantly different noise levels.
+2.Combine the Waterfront and Marina Models and find the best distribution to use for GLMs.
+3.Run GLMS and AICs to find the most appropriate model and predictors.
+4.Create visualization graphs for each site.
 
-```{r setup}
+```{r read in, message=FALSE, include=FALSE}
 knitr::opts_chunk$set(include = FALSE)
 # Set working directory here
 setwd("C:/Users/bankh/My_Repos/habor-seal/data")
@@ -37,9 +37,7 @@ require(MASS) #for glm.nb()
 
 ## Check waterfront location significance
 
-You can also embed plots, for example:
-
-```{r t-test, echo=TRUE}
+```{r t-test, echo=FALSE}
 # Check t-test assumptions
 ## Is noise normal?
 hist(w.data$noise[w.data$location == 1])
@@ -58,17 +56,19 @@ t.test(w.data$noise[w.data$location == 1], w.data$noise[w.data$location == 2])
 ```
 
 Now that I know the two waterfront locations don't have significantly different noise levels, I can merge the two locations by:
-- Summing the number of seals hauled-out
-- Combining the average noise level
+*Summing the number of seals hauled-out
+*Combining the average noise level
 
 ```{r Combine locations, include=FALSE}
 # Combine location avg noise and total seals within dates
+# Set working directory here
+setwd("C:/Users/bankh/My_Repos/habor-seal/data")
 new.w.data<-read.csv("new.w.data.csv")
 ```
 
 ## Merge Waterfront and Marina Models 
 
-```{r merge data, echo=TRUE}
+```{r merge data, include=FALSE}
 # Fix date
 new.w.data$date<-as.Date(as.character(new.w.data$date),format = "%m/%d/%Y")
 m.data$date<-as.Date(as.character(m.data$date),format = "%m/%d/%Y")
@@ -125,7 +125,7 @@ Looks like the best model will contain month, noise, and site as predictors.
 
 To test whether noise affects the number of seals hauled-out by site, I will insert an interaction between noise level and site.
 
-```{r GLM}
+```{r GLM, echo=TRUE}
 model<- glm.nb(seals ~ site*noise + month, data = full.data)
 summary(model) 
 ```
@@ -138,7 +138,7 @@ Everything is significant.
 
 #### Waterfront
 
-```{r Waterfront sealsvnoise, echo=FALSE}
+```{r Wsealsvnoise, echo=FALSE}
 ## Waterfront
 ggplot(new.w.data, aes(noise,seals))+geom_point()+geom_smooth(method = "gam", formula =seals~s(noise))+
   stat_smooth(method="gam",colour="black")+xlab("Average Noise Level (dB)")+ylab("Number of Seals Hauled-out")+
@@ -148,7 +148,7 @@ ggplot(new.w.data, aes(noise,seals))+geom_point()+geom_smooth(method = "gam", fo
 
 #### Marina
 
-```{r Marina sealsvnoise, echo=FALSE}
+```{r Msealsvnoise, echo=FALSE}
 ## Marina
 ggplot(m.data, aes(noise,seals))+geom_point()+geom_smooth(method = "gam", formula =seals~s(noise))+
   stat_smooth(method="gam",colour="black")+xlab("Average Noise Level (dB)")+ylab("Number of Seals Hauled-out")+
@@ -163,7 +163,6 @@ ggplot(m.data, aes(noise,seals))+geom_point()+geom_smooth(method = "gam", formul
 ## Waterfront
 p<-ggplot(new.w.data, aes(x=month,y =seals,group=month))
 p+geom_boxplot(fill="black", alpha=0.2)+
-  scale_x_discrete(limits=c("1","2","3","4","5","6"))+
   xlab("Month")+ylab("Number of Seals")+theme(panel.background = element_blank())
 
 ```
@@ -174,7 +173,6 @@ p+geom_boxplot(fill="black", alpha=0.2)+
 ## Marina
 p<-ggplot(m.data, aes(x=month,y =seals,group=month))
 p+geom_boxplot(fill="black", alpha=0.2)+
-  scale_x_discrete(limits=c("Jun","Jul","Aug","Sept","Oct","Nov"))+
   xlab("Month")+ylab("Number of Seals")+theme(panel.background = element_blank())
 ```
 
