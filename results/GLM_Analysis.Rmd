@@ -18,8 +18,11 @@ In this markdown I will:
 3.Run GLMS and AICs to find the most appropriate model and predictors.
 4.Create visualization graphs for each site.
 
-```{r read in, message=FALSE, include=FALSE}
-knitr::opts_chunk$set(include = FALSE)
+## Check Details in Waterfront Location
+
+#### Check t-test Assumptions
+
+```{r assum, echo=FALSE}
 # Set working directory here
 setwd("C:/Users/bankh/My_Repos/habor-seal/data")
 
@@ -27,48 +30,37 @@ setwd("C:/Users/bankh/My_Repos/habor-seal/data")
 m.data<-read.csv("m.data.csv")
 w.data<-read.csv("w.data.csv")
 
-# Load packages
-require(lme4)
-require(ggplot2)
-require(performance) #for check_collinearity()
-require(MuMIn) # For dredge function
-require(MASS) #for glm.nb()
-```
-
-## Check waterfront location significance
-
-```{r t-test, echo=FALSE}
 # Check t-test assumptions
 ## Is noise normal?
-hist(w.data$noise[w.data$location == 1])
-hist(w.data$noise[w.data$location == 2])
+hist(w.data$noise[w.data$location == 1], breaks = 15)
+hist(w.data$noise[w.data$location == 2], breaks = 15)
 ### Both are normal
 
 ## Equal variance?
 var(w.data$noise[w.data$location == 1])
 var(w.data$noise[w.data$location == 2])
 ### Equal variance
+```
 
-# Run t-test
+#### Run t-test Between Waterfront Locations
+
+```{r t-test, echo=TRUE}
 t.test(w.data$noise[w.data$location == 1], w.data$noise[w.data$location == 2])
-## Not significantly different
-## Move on-to merging data sets
 ```
 
 Now that I know the two waterfront locations don't have significantly different noise levels, I can merge the two locations by:
-*Summing the number of seals hauled-out
-*Combining the average noise level
-
-```{r Combine locations, include=FALSE}
-# Combine location avg noise and total seals within dates
-# Set working directory here
-setwd("C:/Users/bankh/My_Repos/habor-seal/data")
-new.w.data<-read.csv("new.w.data.csv")
-```
+* Summing the number of seals hauled-out
+* Combining the average noise level
 
 ## Merge Waterfront and Marina Models 
 
 ```{r merge data, include=FALSE}
+# Combine location avg noise and total seals within dates
+# Set working directory here
+setwd("C:/Users/bankh/My_Repos/habor-seal/data")
+new.w.data<-read.csv("new.w.data.csv")
+m.data<-read.csv("m.data.csv")
+
 # Fix date
 new.w.data$date<-as.Date(as.character(new.w.data$date),format = "%m/%d/%Y")
 m.data$date<-as.Date(as.character(m.data$date),format = "%m/%d/%Y")
@@ -78,23 +70,32 @@ full.data<-merge(new.w.data,m.data,all = T)
 summary(full.data)
 full.data$time<-as.numeric(full.data$time)
 full.data$month<-as.numeric(full.data$month)
+
 ```
 
-### Check for collinearity
+### Check Collinearity
 
-```{r cor, echo=TRUE}
+```{r cor, echo=FALSE}
+setwd("C:/Users/bankh/My_Repos/habor-seal/data")
+full.data<-read.csv("full.data.csv")
+
 # Run pairwise cor between all independent variables
 ## Cut-off is +/- 0.7
 cor.matrix<-cor(full.data[,c(2:4,6:7)]) 
 # Keep only large correlations in the same model
 cor.matrix[abs(cor.matrix)< 0.7]<-NA
 cor.matrix
-## No colilinearity
 ```
+There appears to be no correlation between the independent variables, so there is no worry of collinearity.
 
 ### Check Histogram
 
 ```{r hist, echo=FALSE}
+setwd("C:/Users/bankh/My_Repos/habor-seal/data")
+full.data<-read.csv("full.data.csv")
+# Load packages
+require(ggplot2)
+
 # Check distribution
 ggplot(full.data, aes(x=seals)) + 
   geom_histogram(aes(y=..density..), colour="black", fill="white")+
@@ -104,34 +105,37 @@ ggplot(full.data, aes(x=seals)) +
 
 A negative binomial model would fit this data best.
 
-## Create GLMs and find best model
+## Create GLMs and find best model with AICc
+To test whether noise affects the number of seals hauled-out by site, I will insert an interaction between noise level and site.
 
-```{r models, echo=TRUE}
+```{r models, echo=FALSE}
+setwd("C:/Users/bankh/My_Repos/habor-seal/data")
+full.data<-read.csv("full.data.csv")
+# Load packages
+require(MASS) #for glm.nb()
+
 model1<- glm.nb(seals ~ 1, data = full.data)
-summary(model1) 
 model2<- glm.nb(seals ~ site*noise + month + tide + time, data = full.data)
-summary(model2) 
 model3<- glm.nb(seals ~ site*noise + month + time, data = full.data)
-summary(model3) 
 model4<- glm.nb(seals ~ site*noise + month, data = full.data)
-summary(model4) 
-```
-
-Now let's look at AICc
-
-```{r AICc, echo=FALSE}
+# Create list
 models<-list(model1, model2, model3, model4)
+
+## Find the AICc function
+source("../code/Functions.R")
 
 ## Calculate AICc with glm of models
 AICc(models) # Looks like site*noise + month + time are the best predictors
 ```
 
+Looks like the best model will contain month, noise, site and time as predictors. This is the summary of that model:
 
-Looks like the best model will contain month, noise, site and time as predictors.
+```{r GLM, echo=FALSE}
+setwd("C:/Users/bankh/My_Repos/habor-seal/data")
+full.data<-read.csv("full.data.csv")
+# Load packages
+require(MASS) #for glm.nb()
 
-To test whether noise affects the number of seals hauled-out by site, I will insert an interaction between noise level and site.
-
-```{r GLM, echo=TRUE}
 model3<- glm.nb(seals ~ site*noise + month + time, data = full.data)
 summary(model3) 
 ```
@@ -145,6 +149,12 @@ Everything is significant.
 #### Waterfront
 
 ```{r Wsealsvnoise, echo=FALSE}
+# Set working directory here
+setwd("C:/Users/bankh/My_Repos/habor-seal/data")
+new.w.data<-read.csv("new.w.data.csv")
+# Load packages
+require(ggplot2)
+
 ## Waterfront
 ggplot(new.w.data, aes(noise,seals))+geom_point()+geom_smooth(method = "gam", formula =seals~s(noise))+
   stat_smooth(method="gam",colour="black")+xlab("Average Noise Level (dB)")+ylab("Number of Seals Hauled-out")+
@@ -155,6 +165,12 @@ ggplot(new.w.data, aes(noise,seals))+geom_point()+geom_smooth(method = "gam", fo
 #### Marina
 
 ```{r Msealsvnoise, echo=FALSE}
+# Set working directory here
+setwd("C:/Users/bankh/My_Repos/habor-seal/data")
+m.data<-read.csv("m.data.csv")
+# Load packages
+require(ggplot2)
+
 ## Marina
 ggplot(m.data, aes(noise,seals))+geom_point()+geom_smooth(method = "gam", formula =seals~s(noise))+
   stat_smooth(method="gam",colour="black")+xlab("Average Noise Level (dB)")+ylab("Number of Seals Hauled-out")+
@@ -166,6 +182,12 @@ ggplot(m.data, aes(noise,seals))+geom_point()+geom_smooth(method = "gam", formul
 #### Waterfront
 
 ```{r waterfront sealsvmonth, echo=FALSE}
+# Set working directory here
+setwd("C:/Users/bankh/My_Repos/habor-seal/data")
+new.w.data<-read.csv("new.w.data.csv")
+# Load packages
+require(ggplot2)
+
 ## Waterfront
 p<-ggplot(new.w.data, aes(x=month,y =seals,group=month))
 p+geom_boxplot(fill="black", alpha=0.2)+
@@ -176,6 +198,12 @@ p+geom_boxplot(fill="black", alpha=0.2)+
 #### Marina
 
 ```{r marina sealsvmonth, echo=FALSE}
+# Set working directory here
+setwd("C:/Users/bankh/My_Repos/habor-seal/data")
+m.data<-read.csv("m.data.csv")
+# Load packages
+require(ggplot2)
+
 ## Marina
 p<-ggplot(m.data, aes(x=month,y =seals,group=month))
 p+geom_boxplot(fill="black", alpha=0.2)+

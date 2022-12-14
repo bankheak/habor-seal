@@ -54,6 +54,8 @@ full.data<-merge(new.w.data,m.data,all = T)
 summary(full.data)
 full.data$time<-as.numeric(full.data$time)
 full.data$month<-as.numeric(full.data$month)
+## Create csv
+write.csv(full.data,"full.data")
 
 # Run pairwise cor between all independent variables
 ## Cut-off is +/- 0.7
@@ -82,7 +84,11 @@ summary(model3)
 model4<- glm.nb(seals ~ site*noise + month, data = full.data)
 summary(model4) 
 
+# Create list
 models<-list(model1, model2, model3, model4)
+
+## Find the AICc function
+source("../code/Functions.R")
 
 ## Calculate AICc with glm of models
 AICc(models) # Looks like site*noise + month + time are the best predictors

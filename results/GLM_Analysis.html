@@ -367,29 +367,36 @@ Marina Models and find the best distribution to use for GLMs. 3.Run GLMS
 and AICs to find the most appropriate model and predictors. 4.Create
 visualization graphs for each site.</p>
 </div>
-<div id="check-waterfront-location-significance" class="section level2">
-<h2>Check waterfront location significance</h2>
+<div id="check-details-in-waterfront-location" class="section level2">
+<h2>Check Details in Waterfront Location</h2>
+<div id="check-t-test-assumptions" class="section level3">
+<h3>Check t-test Assumptions</h3>
+</div>
+<div id="run-t-test-between-waterfront-locations" class="section level3">
+<h3>Run t-test Between Waterfront Locations</h3>
 <p>Now that I know the two waterfront locations don’t have significantly
-different noise levels, I can merge the two locations by: <em>Summing
-the number of seals hauled-out </em>Combining the average noise
-level</p>
+different noise levels, I can merge the two locations by: * Summing the
+number of seals hauled-out * Combining the average noise level</p>
+</div>
 </div>
 <div id="merge-waterfront-and-marina-models" class="section level2">
 <h2>Merge Waterfront and Marina Models</h2>
-<div id="check-for-collinearity" class="section level3">
-<h3>Check for collinearity</h3>
+<div id="check-collinearity" class="section level3">
+<h3>Check Collinearity</h3>
+<p>There appears to be no correlation between the independent variables,
+so there is no worry of collinearity.</p>
 </div>
 <div id="check-histogram" class="section level3">
 <h3>Check Histogram</h3>
 <p>A negative binomial model would fit this data best.</p>
 </div>
 </div>
-<div id="create-glms-and-find-best-model" class="section level2">
-<h2>Create GLMs and find best model</h2>
-<p>Looks like the best model will contain month, noise, and site as
-predictors.</p>
+<div id="create-glms-and-find-best-model-with-aicc" class="section level2">
+<h2>Create GLMs and find best model with AICc</h2>
 <p>To test whether noise affects the number of seals hauled-out by site,
 I will insert an interaction between noise level and site.</p>
+<p>Looks like the best model will contain month, noise, site and time as
+predictors. This is the summary of that model:</p>
 <p>Everything is significant.</p>
 </div>
 <div id="graphs" class="section level2">
