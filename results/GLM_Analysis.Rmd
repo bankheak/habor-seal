@@ -1,6 +1,6 @@
 ---
 title: "Harbor seals analysis"
-output: html_document
+output: pdf_document
 date: "2022-12-14"
 ---
 

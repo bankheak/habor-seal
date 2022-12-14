@@ -1,0 +1,186 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same} % disable monospaced font for URLs
+\hypersetup{
+  pdftitle={Harbor seals analysis},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{Harbor seals analysis}
+\author{}
+\date{\vspace{-2.5em}2022-12-14}
+
+\begin{document}
+\maketitle
+
+\hypertarget{waterfront-marina-glm-analysis}{%
+\subsection{Waterfront-Marina GLM
+analysis}\label{waterfront-marina-glm-analysis}}
+
+In this markdown I will:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  Find the best distribution to use for GLMs.
+\item
+  Run GLMS and AICs to find the most appropriate model and predictors.
+\item
+  Create visualization graphs for each site.
+\end{enumerate}
+
+\hypertarget{check-histogram}{%
+\subsubsection{Check Histogram}\label{check-histogram}}
+
+\includegraphics{GLM_Analysis_files/figure-latex/density-1.pdf}
+
+A negative binomial model would fit this data best.
+
+\hypertarget{create-glms-and-find-best-model-with-aicc}{%
+\subsection{Create GLMs and find best model with
+AICc}\label{create-glms-and-find-best-model-with-aicc}}
+
+To test whether noise affects the number of seals hauled-out by site, I
+will insert an interaction between noise level and site.
+
+\begin{verbatim}
+## Loading required package: MASS
+\end{verbatim}
+
+\begin{verbatim}
+##                                            N df     AICc
+## seals ~ 1                                155  2 1143.696
+## seals ~ site*noise + month + tide + time 155  8 1061.879
+## seals ~ site*noise + month + time        155  7 1060.031
+## seals ~ site*noise + month               155  6 1062.170
+\end{verbatim}
+
+Looks like the best model will contain month, noise, site and time as
+predictors. This is the summary of that model:
+
+\begin{verbatim}
+## 
+## Call:
+## glm.nb(formula = seals ~ site * noise + month + time, data = full.data, 
+##     init.theta = 1.738579161, link = log)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -2.9338  -0.8665  -0.1937   0.4408   2.4225  
+## 
+## Coefficients:
+##                      Estimate Std. Error z value Pr(>|z|)    
+## (Intercept)           8.31830    1.07277   7.754 8.90e-15 ***
+## sitewaterfront       -3.62238    1.25922  -2.877  0.00402 ** 
+## noise                -0.06368    0.02554  -2.493  0.01266 *  
+## month                -0.18974    0.04597  -4.127 3.67e-05 ***
+## time                 -0.05820    0.02795  -2.082  0.03733 *  
+## sitewaterfront:noise  0.05995    0.02923   2.051  0.04028 *  
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for Negative Binomial(1.7386) family taken to be 1)
+## 
+##     Null deviance: 319.08  on 154  degrees of freedom
+## Residual deviance: 183.65  on 149  degrees of freedom
+## AIC: 1059.3
+## 
+## Number of Fisher Scoring iterations: 1
+## 
+## 
+##               Theta:  1.739 
+##           Std. Err.:  0.250 
+## 
+##  2 x log-likelihood:  -1045.269
+\end{verbatim}
+
+Everything is significant.
+
+\hypertarget{graphs}{%
+\subsection{Graphs}\label{graphs}}
+
+\hypertarget{number-of-seals-hauled-out-vs.-noise-level}{%
+\subsubsection{Number of Seals Hauled-out vs.~Noise
+Level}\label{number-of-seals-hauled-out-vs.-noise-level}}
+
+\hypertarget{waterfront}{%
+\paragraph{Waterfront}\label{waterfront}}
+
+\includegraphics{GLM_Analysis_files/figure-latex/Wsealsvnoise-1.pdf}
+
+\hypertarget{marina}{%
+\paragraph{Marina}\label{marina}}
+
+\includegraphics{GLM_Analysis_files/figure-latex/Msealsvnoise-1.pdf}
+
+\hypertarget{number-of-seals-hauled-out-vs.-month}{%
+\subsubsection{Number of Seals Hauled-out
+vs.~Month}\label{number-of-seals-hauled-out-vs.-month}}
+
+\hypertarget{waterfront-1}{%
+\paragraph{Waterfront}\label{waterfront-1}}
+
+\includegraphics{GLM_Analysis_files/figure-latex/wsealsvmonth-1.pdf}
+
+\hypertarget{marina-1}{%
+\paragraph{Marina}\label{marina-1}}
+
+\includegraphics{GLM_Analysis_files/figure-latex/msealsvmonth-1.pdf}
+
+\end{document}
