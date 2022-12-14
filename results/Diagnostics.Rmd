@@ -1,0 +1,112 @@
+---
+title: "Anthropogenic Noise Disturbance on Harbor Seals"
+author: "Kyra Bankhead"
+output: html_document
+date: "2022-12-14"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Waterfront-Marina GLM analysis
+
+In this markdown I will:
+
+1. Check whether the two waterfront locations have significantly different noise levels.
+
+2. Combine the Waterfront and Marina Models and check for collinearity.
+
+
+## Check Details in Waterfront Location
+
+#### Check t-test Assumptions
+
+##### Normal Distribution?
+
+```{r hist, echo=FALSE}
+# Set working directory here
+setwd("C:/Users/bankh/My_Repos/habor-seal/data")
+
+# Retrieve data
+m.data<-read.csv("m.data.csv")
+w.data<-read.csv("w.data.csv")
+
+# Check t-test assumptions
+## Is noise normal?
+hist(w.data$noise[w.data$location == 1], breaks = 15, main = "Location 1", xlab = "Noise Level (dB)")
+hist(w.data$noise[w.data$location == 2], breaks = 15, main = "Location 2", xlab = "Noise Level (dB)")
+
+```
+
+Both have relatively normal distributions
+
+##### Equal Variance?
+
+```{r var, echo=TRUE}
+# Set working directory here
+setwd("C:/Users/bankh/My_Repos/habor-seal/data")
+
+# Retrieve data
+m.data<-read.csv("m.data.csv")
+w.data<-read.csv("w.data.csv")
+
+# Location 1
+var(w.data$noise[w.data$location == 1])
+
+# Location 2
+var(w.data$noise[w.data$location == 2])
+
+```
+
+
+#### Run t-test Between Waterfront Locations
+
+```{r ttest, echo=FALSE}
+# Set working directory here
+setwd("C:/Users/bankh/My_Repos/habor-seal/data")
+
+# Retrieve data
+w.data<-read.csv("w.data.csv")
+
+t.test(w.data$noise[w.data$location == 1], w.data$noise[w.data$location == 2])
+```
+
+Now that I know the two waterfront locations don't have significantly different noise levels, I can merge the two locations by:
+* Summing the number of seals hauled-out
+* Combining the average noise level
+
+## Merge Waterfront and Marina Models 
+
+```{r merge, include=FALSE}
+# Combine location avg noise and total seals within dates
+# Set working directory here
+setwd("C:/Users/bankh/My_Repos/habor-seal/data")
+new.w.data<-read.csv("new.w.data.csv")
+m.data<-read.csv("m.data.csv")
+
+# Fix date
+new.w.data$date<-as.Date(as.character(new.w.data$date),format = "%m/%d/%Y")
+m.data$date<-as.Date(as.character(m.data$date),format = "%m/%d/%Y")
+
+# Merge data
+full.data<-merge(new.w.data,m.data,all = T)
+summary(full.data)
+full.data$time<-as.numeric(full.data$time)
+full.data$month<-as.numeric(full.data$month)
+```
+
+### Check Collinearity
+```{r collin, echo=FALSE}
+setwd("C:/Users/bankh/My_Repos/habor-seal/data")
+full.data<-read.csv("full.data.csv")
+
+# Run pairwise cor between all independent variables
+## Cut-off is +/- 0.7
+cor.matrix<-cor(full.data[,c(2:4,6:7)]) 
+# Keep only large correlations in the same model
+cor.matrix[abs(cor.matrix)< 0.7]<-NA
+cor.matrix
+```
+
+There appears to be no correlation between the independent variables, so there is no worry of collinearity.
