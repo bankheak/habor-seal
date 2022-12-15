@@ -108,14 +108,5 @@ interaction.plot(x.factor = full.data$noise, #x-axis variable
 # PART 4: Run Diagnostics---------------------------------------------
 
 # Plot residuals by predicted values
-plot(model$resid~model$fitted) # Plot residual vs. predicted values
-plot(model$resid~full.data$noise)
-plot(model$resid~full.data$month)
-## All values are zero inflated
-
-# Parameters
-con<-confint(model3,level = 0.90)
-par<-as.data.frame(cbind(model3$coef,sqrt(diag(vcov(model3)))))
-parms<-as.data.frame(cbind(par,con))
-colnames(parms)<- c("Estimate","Std.Error","Lower","Upper")
-parms
+plot(model3$resid~model3$fitted)
+## Values are zero inflated
