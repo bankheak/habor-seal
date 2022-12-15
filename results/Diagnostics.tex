@@ -145,12 +145,9 @@ Both have relatively normal distributions
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# Set working directory here}
-\FunctionTok{setwd}\NormalTok{(}\StringTok{"C:/Users/bankh/My\_Repos/habor{-}seal/data"}\NormalTok{)}
-
 \CommentTok{\# Retrieve data}
-\NormalTok{m.data}\OtherTok{\textless{}{-}}\FunctionTok{read.csv}\NormalTok{(}\StringTok{"m.data.csv"}\NormalTok{)}
-\NormalTok{w.data}\OtherTok{\textless{}{-}}\FunctionTok{read.csv}\NormalTok{(}\StringTok{"w.data.csv"}\NormalTok{)}
+\NormalTok{m.data}\OtherTok{\textless{}{-}}\FunctionTok{read.csv}\NormalTok{(}\StringTok{"../data/m.data.csv"}\NormalTok{)}
+\NormalTok{w.data}\OtherTok{\textless{}{-}}\FunctionTok{read.csv}\NormalTok{(}\StringTok{"../data/w.data.csv"}\NormalTok{)}
 
 \CommentTok{\# Location 1}
 \FunctionTok{var}\NormalTok{(w.data}\SpecialCharTok{$}\NormalTok{noise[w.data}\SpecialCharTok{$}\NormalTok{location }\SpecialCharTok{==} \DecValTok{1}\NormalTok{])}

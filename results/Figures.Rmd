@@ -1,0 +1,75 @@
+---
+title: "Graphs for harbor seal analysis"
+author: "Kyra Bankhead"
+output: html_document
+date: "2022-12-15"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Number of Seals Hauled-out vs. Noise Level
+
+#### Waterfront
+
+```{r Wsealsvnoise, echo=FALSE, message=FALSE, warning=FALSE}
+# Set working directory here
+setwd("C:/Users/bankh/My_Repos/habor-seal/data")
+new.w.data<-read.csv("new.w.data.csv")
+# Load packages
+require(ggplot2)
+
+## Waterfront
+ggplot(new.w.data, aes(noise,seals))+geom_point()+geom_smooth(method = "gam", formula =seals~s(noise))+
+  stat_smooth(method="gam",colour="black")+xlab("Average Noise Level (dB)")+ylab("Number of Seals Hauled-out")+
+  coord_trans(x = "log10")+theme(panel.background = element_blank())
+```
+
+#### Marina
+
+```{r Msealsvnoise, echo=FALSE, message=FALSE, warning=FALSE}
+# Set working directory here
+setwd("C:/Users/bankh/My_Repos/habor-seal/data")
+m.data<-read.csv("m.data.csv")
+# Load packages
+require(ggplot2)
+
+## Marina
+ggplot(m.data, aes(noise,seals))+geom_point()+geom_smooth(method = "gam", formula =seals~s(noise))+
+  stat_smooth(method="gam",colour="black")+xlab("Average Noise Level (dB)")+ylab("Number of Seals Hauled-out")+
+  coord_trans(x = "log10")+theme(panel.background = element_blank())
+```
+
+### Number of Seals Hauled-out vs. Month
+
+#### Waterfront
+
+```{r wsealsvmonth, echo=FALSE, message=FALSE}
+# Set working directory here
+setwd("C:/Users/bankh/My_Repos/habor-seal/data")
+new.w.data<-read.csv("new.w.data.csv")
+# Load packages
+require(ggplot2)
+
+## Waterfront
+p<-ggplot(new.w.data, aes(x=month,y =seals,group=month))
+p+geom_boxplot(fill="black", alpha=0.2)+
+  xlab("Month")+ylab("Number of Seals")+theme(panel.background = element_blank())
+```
+
+#### Marina
+
+```{r msealsvmonth, echo=FALSE, message=FALSE}
+# Set working directory here
+setwd("C:/Users/bankh/My_Repos/habor-seal/data")
+m.data<-read.csv("m.data.csv")
+# Load packages
+require(ggplot2)
+
+## Marina
+p<-ggplot(m.data, aes(x=month,y =seals,group=month))
+p+geom_boxplot(fill="black", alpha=0.2)+
+  xlab("Month")+ylab("Number of Seals")+theme(panel.background = element_blank())
+```
+

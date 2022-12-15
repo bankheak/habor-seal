@@ -1,8 +1,10 @@
 ---
 title: "Anthropogenic Noise Disturbance on Harbor Seals"
 author: "Kyra Bankhead"
-output: pdf_document
 date: "2022-12-14"
+output:
+  html_document:
+    df_print: paged
 ---
 
 ```{r setup, include=FALSE}
@@ -25,12 +27,9 @@ In this markdown I will:
 ##### Normal Distribution?
 
 ```{r hist, echo=FALSE}
-# Set working directory here
-setwd("C:/Users/bankh/My_Repos/habor-seal/data")
-
 # Retrieve data
-m.data<-read.csv("m.data.csv")
-w.data<-read.csv("w.data.csv")
+m.data<-read.csv("../data/m.data.csv")
+w.data<-read.csv("../data/w.data.csv")
 
 # Check t-test assumptions
 ## Is noise normal?
@@ -44,12 +43,9 @@ Both have relatively normal distributions
 ##### Equal Variance?
 
 ```{r var, echo=TRUE}
-# Set working directory here
-setwd("C:/Users/bankh/My_Repos/habor-seal/data")
-
 # Retrieve data
-m.data<-read.csv("m.data.csv")
-w.data<-read.csv("w.data.csv")
+m.data<-read.csv("../data/m.data.csv")
+w.data<-read.csv("../data/w.data.csv")
 
 # Location 1
 var(w.data$noise[w.data$location == 1])
@@ -63,11 +59,8 @@ var(w.data$noise[w.data$location == 2])
 #### Run t-test Between Waterfront Locations
 
 ```{r ttest, echo=FALSE}
-# Set working directory here
-setwd("C:/Users/bankh/My_Repos/habor-seal/data")
-
 # Retrieve data
-w.data<-read.csv("w.data.csv")
+w.data<-read.csv("../data/w.data.csv")
 
 t.test(w.data$noise[w.data$location == 1], w.data$noise[w.data$location == 2])
 ```
@@ -80,10 +73,8 @@ Now that I know the two waterfront locations don't have significantly different 
 
 ```{r merge, include=FALSE}
 # Combine location avg noise and total seals within dates
-# Set working directory here
-setwd("C:/Users/bankh/My_Repos/habor-seal/data")
-new.w.data<-read.csv("new.w.data.csv")
-m.data<-read.csv("m.data.csv")
+new.w.data<-read.csv("../data/new.w.data.csv")
+m.data<-read.csv("../data/m.data.csv")
 
 # Fix date
 new.w.data$date<-as.Date(as.character(new.w.data$date),format = "%m/%d/%Y")
@@ -98,8 +89,7 @@ full.data$month<-as.numeric(full.data$month)
 
 ### Check Collinearity
 ```{r collin, echo=FALSE}
-setwd("C:/Users/bankh/My_Repos/habor-seal/data")
-full.data<-read.csv("full.data.csv")
+full.data<-read.csv("../data/full.data.csv")
 
 # Run pairwise cor between all independent variables
 ## Cut-off is +/- 0.7

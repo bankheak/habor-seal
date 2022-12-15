@@ -12,10 +12,7 @@ m.data<-read.csv("m.data.csv")
 w.data<-read.csv("w.data.csv")
 
 # Load packages
-require(lme4)
 require(ggplot2)
-require(performance) #for check_collinearity()
-require(MuMIn) # For dredge function
 require(MASS) #for glm.nb()
 
 ###########################################################################
@@ -93,6 +90,20 @@ source("../code/Functions.R")
 ## Calculate AICc with glm of models
 AICc(models) # Looks like site*noise + month + time are the best predictors
 
+summary(model3)
+
+# What does the interaction between site and noise look like?
+interaction.plot(x.factor = full.data$noise, #x-axis variable
+                 trace.factor = full.data$site, #variable for lines
+                 response = full.data$seals, #y-axis variable
+                 fun = median, #metric to plot
+                 ylab = "Number of Seals Hauled-out",
+                 xlab = "Noise Level (dB)",
+                 col = c("pink", "blue"),
+                 lty = 1, #line type
+                 lwd = 2, #line width
+                 trace.label = "Site")
+
 ###########################################################################
 # PART 4: Run Diagnostics---------------------------------------------
 
@@ -102,3 +113,9 @@ plot(model$resid~full.data$noise)
 plot(model$resid~full.data$month)
 ## All values are zero inflated
 
+# Parameters
+con<-confint(model3,level = 0.90)
+par<-as.data.frame(cbind(model3$coef,sqrt(diag(vcov(model3)))))
+parms<-as.data.frame(cbind(par,con))
+colnames(parms)<- c("Estimate","Std.Error","Lower","Upper")
+parms
