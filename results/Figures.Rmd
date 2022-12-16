@@ -1,7 +1,7 @@
 ---
 title: "Graphs for harbor seal analysis"
 author: "Kyra Bankhead"
-output: html_document
+output: pdf_document
 date: "2022-12-15"
 ---
 

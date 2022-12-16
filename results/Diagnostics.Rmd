@@ -2,9 +2,7 @@
 title: "Anthropogenic Noise Disturbance on Harbor Seals"
 author: "Kyra Bankhead"
 date: "2022-12-14"
-output:
-  html_document:
-    df_print: paged
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
@@ -21,12 +19,10 @@ In this markdown I will:
 
 
 ## Check Details in Waterfront Location
-
 #### Check t-test Assumptions
-
 ##### Normal Distribution?
 
-```{r hist, echo=FALSE}
+```{r hist, echo=FALSE, message=FALSE, warning=FALSE}
 # Retrieve data
 m.data<-read.csv("../data/m.data.csv")
 w.data<-read.csv("../data/w.data.csv")

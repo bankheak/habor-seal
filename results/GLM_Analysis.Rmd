@@ -2,9 +2,7 @@
 title: "Harbor seals analysis"
 author: "Kyra Bankhead"
 date: "2022-12-14"
-output:
-  pdf_document: default
-  html_document: default
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
@@ -74,7 +72,7 @@ summary(model3)
 
 * Site and noise are significant predictors for the number of harbor seals hauled-out. The effect of noise on the number of seals haul-out depends on what site they are located in.
 
-```{r interact}
+```{r interact, echo=FALSE, message=FALSE, warning=FALSE}
 full.data<-read.csv("../data/full.data.csv")
 
 # What does the interaction between site and noise look like?
