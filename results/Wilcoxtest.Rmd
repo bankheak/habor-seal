@@ -1,0 +1,56 @@
+---
+title: "Noise difference between sites"
+author: "Kyra Bankhead"
+output: html_document
+date: "2022-12-16"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+In this markdown I will:
+
+1. Check the assumptions of a t-test.
+
+2. Run a wilcox test on the noise levels between sites.
+
+## Check t-test assumptions
+
+### Are the noise levels normal within sites?
+
+```{r norm, echo=FALSE}
+full.data<-read.csv("../data/full.data.csv")
+
+# waterfront
+hist(full.data$noise[full.data$site == "waterfront"], breaks = 15, main = "Waterfront", xlab = "Noise Level (dB)")
+# marina
+hist(full.data$noise[full.data$site == "marina"], breaks = 15, main = "Marina", xlab = "Noise Level (dB)")
+```
+The marina site has nonnormality in noise levels.
+
+### Are the noise level variences equal between sites?
+
+```{r var}
+full.data<-read.csv("../data/full.data.csv")
+
+# waterfront
+var(full.data$noise[full.data$site == "waterfront"])
+
+# marina
+var(full.data$noise[full.data$site == "marina"])
+```
+Variences are not equal. Therefore we need to run a wilcox test (U-test).
+
+## Check Wilcox Test
+
+```{r cars}
+full.data<-read.csv("../data/full.data.csv")
+
+#U-test
+wilcox.test(noise ~ site, data = full.data,
+            exact = FALSE)
+res<-wilcox.test(full.data$noise[full.data$site == "waterfront"], full.data$noise[full.data$site == "marina"])
+res$p.value
+```
+The noise levels between sites are significantly different.

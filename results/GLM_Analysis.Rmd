@@ -90,7 +90,7 @@ interaction.plot(x.factor = full.data$noise, #x-axis variable
 
 ## Use model output to predict response variable
 
-```{r predict}
+```{r predict, echo=FALSE}
 full.data<-read.csv("../data/full.data.csv")
 
 newdata <- data.frame(noise = mean(full.data$noise), 
