@@ -53,6 +53,7 @@ full.data$time<-as.numeric(full.data$time)
 full.data$month<-as.numeric(full.data$month)
 ## Create csv
 write.csv(full.data,"full.data")
+full.data<- read.csv("full.data.csv")
 
 # Run pairwise cor between all independent variables
 ## Cut-off is +/- 0.7
@@ -66,7 +67,13 @@ cor.matrix
 ggplot(full.data, aes(x=seals)) + 
   geom_histogram(aes(y=..density..), colour="black", fill="white")+
   geom_density()+stat_density(alpha=.2,adjust = 1, fill="#FF6666")+xlab("Number of Seals Hauled-out")+ylab("Density")+theme(panel.background = element_blank())
-## Negative binomial would be the best fit
+## Negative binomial or poisson would be the best fit
+
+## Check which one would fit better 
+m1<- glm.nb(seals ~ 1, data = full.data)
+m3<- glm(seals ~ 1, data = full.data, family = "poisson")
+pchisq(2 * (logLik(m1) - logLik(m3)), df = 1, lower.tail = FALSE)
+### Negative binomial would be the best fit
 
 ###########################################################################
 # PART 3: Run GLM and AICc---------------------------------------------
@@ -106,6 +113,19 @@ interaction.plot(x.factor = full.data$noise, #x-axis variable
 
 ###########################################################################
 # PART 4: Run Diagnostics---------------------------------------------
+
+# Use model to predict the response variable 
+newdata <- data.frame(noise = mean(full.data$noise), 
+                       site = factor(1:2, levels = 1:2, 
+                                      labels = unique(full.data$site)))
+m3<- glm.nb(seals ~ site * noise, data = full.data)
+newdata$phat <- predict.glm(m3, newdata, type = "response")
+newdata
+
+# Plot on top of raw data
+effect_plot(model3, pred = noise, interval = TRUE, partial.residuals = TRUE,
+            jitter = c(0.1, 0), x.label = "Average Noise Level (dB)", 
+            y.label = "Number of Seals Hauled-out")
 
 # Plot residuals by predicted values
 plot(model3$resid~model3$fitted)

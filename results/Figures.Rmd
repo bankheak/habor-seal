@@ -19,6 +19,9 @@ new.w.data<-read.csv("../data/new.w.data.csv")
 require(ggplot2)
 
 ## Waterfront
+effect_plot(model3, pred = noise, interval = TRUE, partial.residuals = TRUE,
+            jitter = c(0.1, 0))
+
 ggplot(new.w.data, aes(noise,seals))+geom_point()+geom_smooth(method = "gam", formula =seals~s(noise))+
   stat_smooth(method="gam",colour="black")+xlab("Average Noise Level (dB)")+ylab("Number of Seals Hauled-out")+
   coord_trans(x = "log10")+theme(panel.background = element_blank())

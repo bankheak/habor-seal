@@ -88,3 +88,18 @@ interaction.plot(x.factor = full.data$noise, #x-axis variable
                  trace.label = "Site")
 ```
 
+## Use model output to predict response variable
+
+```{r predict}
+full.data<-read.csv("../data/full.data.csv")
+
+newdata <- data.frame(noise = mean(full.data$noise), 
+                       site = factor(1:2, levels = 1:2, 
+                                      labels = unique(full.data$site)))
+m3<- glm.nb(seals ~ site * noise, data = full.data)
+newdata$phat <- predict.glm(m3, newdata, type = "response")
+newdata
+```
+
+In the output above, we see that the predicted number of seals hauled-out for the Marina is about 17.03, holding noise level at its mean. The predicted number of events for the Waterfront is lower at 8.60.
+
