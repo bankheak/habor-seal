@@ -34,6 +34,46 @@
 \makeatother
 \usepackage{xcolor}
 \usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
 \usepackage{graphicx}
 \makeatletter
 \def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
@@ -151,37 +191,32 @@ predictors. This is the summary of that model:
 ##  2 x log-likelihood:  -1045.269
 \end{verbatim}
 
-Everything is significant.
+\begin{itemize}
+\item
+  Month and time are significant predictors for how many harbor seals
+  haul-out.
+\item
+  Site and noise are significant predictors for the number of harbor
+  seals hauled-out. The effect of noise on the number of seals haul-out
+  depends on what site they are located in.
+\end{itemize}
 
-\hypertarget{graphs}{%
-\subsection{Graphs}\label{graphs}}
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# What does the interaction between site and noise look like?}
+\FunctionTok{interaction.plot}\NormalTok{(}\AttributeTok{x.factor =}\NormalTok{ full.data}\SpecialCharTok{$}\NormalTok{noise, }\CommentTok{\#x{-}axis variable}
+                 \AttributeTok{trace.factor =}\NormalTok{ full.data}\SpecialCharTok{$}\NormalTok{site, }\CommentTok{\#variable for lines}
+                 \AttributeTok{response =}\NormalTok{ full.data}\SpecialCharTok{$}\NormalTok{seals, }\CommentTok{\#y{-}axis variable}
+                 \AttributeTok{fun =}\NormalTok{ median, }\CommentTok{\#metric to plot}
+                 \AttributeTok{ylab =} \StringTok{"Number of Seals Hauled{-}out"}\NormalTok{,}
+                 \AttributeTok{xlab =} \StringTok{"Noise Level (dB)"}\NormalTok{,}
+                 \AttributeTok{col =} \FunctionTok{c}\NormalTok{(}\StringTok{"pink"}\NormalTok{, }\StringTok{"blue"}\NormalTok{),}
+                 \AttributeTok{lty =} \DecValTok{1}\NormalTok{, }\CommentTok{\#line type}
+                 \AttributeTok{lwd =} \DecValTok{2}\NormalTok{, }\CommentTok{\#line width}
+                 \AttributeTok{trace.label =} \StringTok{"Site"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
 
-\hypertarget{number-of-seals-hauled-out-vs.-noise-level}{%
-\subsubsection{Number of Seals Hauled-out vs.~Noise
-Level}\label{number-of-seals-hauled-out-vs.-noise-level}}
-
-\hypertarget{waterfront}{%
-\paragraph{Waterfront}\label{waterfront}}
-
-\includegraphics{GLM_Analysis_files/figure-latex/Wsealsvnoise-1.pdf}
-
-\hypertarget{marina}{%
-\paragraph{Marina}\label{marina}}
-
-\includegraphics{GLM_Analysis_files/figure-latex/Msealsvnoise-1.pdf}
-
-\hypertarget{number-of-seals-hauled-out-vs.-month}{%
-\subsubsection{Number of Seals Hauled-out
-vs.~Month}\label{number-of-seals-hauled-out-vs.-month}}
-
-\hypertarget{waterfront-1}{%
-\paragraph{Waterfront}\label{waterfront-1}}
-
-\includegraphics{GLM_Analysis_files/figure-latex/wsealsvmonth-1.pdf}
-
-\hypertarget{marina-1}{%
-\paragraph{Marina}\label{marina-1}}
-
-\includegraphics{GLM_Analysis_files/figure-latex/msealsvmonth-1.pdf}
+\includegraphics{GLM_Analysis_files/figure-latex/interact-1.pdf}
 
 \end{document}

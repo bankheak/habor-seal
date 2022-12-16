@@ -14,9 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 #### Waterfront
 
 ```{r Wsealsvnoise, echo=FALSE, message=FALSE, warning=FALSE}
-# Set working directory here
-setwd("C:/Users/bankh/My_Repos/habor-seal/data")
-new.w.data<-read.csv("new.w.data.csv")
+new.w.data<-read.csv("../data/new.w.data.csv")
 # Load packages
 require(ggplot2)
 
@@ -29,9 +27,7 @@ ggplot(new.w.data, aes(noise,seals))+geom_point()+geom_smooth(method = "gam", fo
 #### Marina
 
 ```{r Msealsvnoise, echo=FALSE, message=FALSE, warning=FALSE}
-# Set working directory here
-setwd("C:/Users/bankh/My_Repos/habor-seal/data")
-m.data<-read.csv("m.data.csv")
+m.data<-read.csv("../data/m.data.csv")
 # Load packages
 require(ggplot2)
 
@@ -46,9 +42,7 @@ ggplot(m.data, aes(noise,seals))+geom_point()+geom_smooth(method = "gam", formul
 #### Waterfront
 
 ```{r wsealsvmonth, echo=FALSE, message=FALSE}
-# Set working directory here
-setwd("C:/Users/bankh/My_Repos/habor-seal/data")
-new.w.data<-read.csv("new.w.data.csv")
+new.w.data<-read.csv("../data/new.w.data.csv")
 # Load packages
 require(ggplot2)
 
@@ -61,9 +55,7 @@ p+geom_boxplot(fill="black", alpha=0.2)+
 #### Marina
 
 ```{r msealsvmonth, echo=FALSE, message=FALSE}
-# Set working directory here
-setwd("C:/Users/bankh/My_Repos/habor-seal/data")
-m.data<-read.csv("m.data.csv")
+m.data<-read.csv("../data/m.data.csv")
 # Load packages
 require(ggplot2)
 
