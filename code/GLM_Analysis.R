@@ -14,6 +14,7 @@ w.data<-read.csv("w.data.csv")
 # Load packages
 require(ggplot2)
 require(MASS) #for glm.nb()
+require(performance)
 
 ###########################################################################
 # PART 1: Check Location Significance at Waterfront ---------------------------------------------
@@ -69,11 +70,14 @@ ggplot(full.data, aes(x=seals)) +
   geom_density()+stat_density(alpha=.2,adjust = 1, fill="#FF6666")+xlab("Number of Seals Hauled-out")+ylab("Density")+theme(panel.background = element_blank())
 ## Negative binomial or poisson would be the best fit
 
-## Check which one would fit better 
-m1<- glm.nb(seals ~ 1, data = full.data)
-m3<- glm(seals ~ 1, data = full.data, family = "poisson")
-pchisq(2 * (logLik(m1) - logLik(m3)), df = 1, lower.tail = FALSE)
-### Negative binomial would be the best fit
+## Does the mean equal the variance?
+var(full.data$seals)
+mean(full.data$seals)
+### Variance is way higher than the mean
+
+### Make sure overdispersion is detected with full model
+mod<- glm(seals ~ site*noise + month + tide + time, data = full.data, family = "poisson")
+check_overdispersion(mod) 
 
 ###########################################################################
 # PART 3: Run GLM and AICc---------------------------------------------

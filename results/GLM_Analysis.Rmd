@@ -9,8 +9,6 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Waterfront-Marina GLM analysis
-
 In this markdown I will:
 
 1. Find the best distribution to use for GLMs.
@@ -19,7 +17,7 @@ In this markdown I will:
 
 3. Create visualization graphs for each site.
 
-### Check Histogram
+## Check for Appropriate Distribution
 
 ```{r density, echo=FALSE, message=FALSE, warning=FALSE}
 full.data<-read.csv("../data/full.data.csv")
@@ -33,7 +31,18 @@ ggplot(full.data, aes(x=seals)) +
 
 ```
 
-A negative binomial model would fit this data best.
+Negative binomial or poisson would be the best fit. Let's check if the mean is equal to the variance.
+
+```{r vartomean, echo=TRUE}
+var(full.data$seals)
+mean(full.data$seals)
+
+# Make sure overdispersion is detected with full model
+mod<- glm(seals ~ site*noise + month + tide + time, data = full.data, family = "poisson")
+check_overdispersion(mod) 
+```
+
+The variance is way higher than the mean which was confirmed by the Pearson chi-squared test, therefore the Poisson distribution is not applicable here and we will continue with the negative binomial distribution.
 
 ## Create GLMs and find best model with AICc
 To test whether noise affects the number of seals hauled-out by site, I will insert an interaction between noise level and site.
