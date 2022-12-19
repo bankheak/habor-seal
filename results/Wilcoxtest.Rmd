@@ -55,7 +55,7 @@ res$p.value
 ```
 The noise levels between sites are significantly different.
 
-## Check average noise levels within sites
+## Check average and standard devition noise levels within sites
 
 ```{r avg, echo=TRUE}
 new.w.data<-read.csv("../data/new.w.data.csv")
@@ -63,9 +63,10 @@ m.data<-read.csv("../data/m.data.csv")
 
 # waterfront
 mean(new.w.data$noise)
+sd(new.w.data$noise)
 
 # marina
 mean(m.data$noise)
-
+sd(m.data$noise)
 ```
 

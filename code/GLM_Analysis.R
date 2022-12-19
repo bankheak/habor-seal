@@ -47,6 +47,13 @@ new.w.data<-read.csv("new.w.data.csv")
 new.w.data$date<-as.Date(as.character(new.w.data$date),format = "%m/%d/%Y")
 m.data$date<-as.Date(as.character(m.data$date),format = "%m/%d/%Y")
 
+# Add haul-out size adjustment
+gcf<- 20
+w<-700/gcf
+m<-1180/gcf
+new.w.data$adj.seals<-new.w.data$seals/w
+m.data$adj.seals<-m.data$seals/m
+
 # Merge data
 full.data<-merge(new.w.data,m.data,all = T)
 summary(full.data)

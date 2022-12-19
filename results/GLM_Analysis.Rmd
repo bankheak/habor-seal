@@ -33,7 +33,10 @@ ggplot(full.data, aes(x=seals)) +
 
 Negative binomial or poisson would be the best fit. Let's check if the mean is equal to the variance and if there is zero inflation.
 
-```{r vartomean, echo=TRUE}
+```{r choice, echo=TRUE}
+full.data<-read.csv("../data/full.data.csv")
+require(performance)
+
 var(full.data$seals)
 mean(full.data$seals)
 
