@@ -78,6 +78,7 @@ mean(full.data$seals)
 ### Make sure overdispersion is detected with full model
 mod<- glm(seals ~ site*noise + month + tide + time, data = full.data, family = "poisson")
 check_overdispersion(mod) 
+check_zeroinflation(mod)
 
 ###########################################################################
 # PART 3: Run GLM and AICc---------------------------------------------

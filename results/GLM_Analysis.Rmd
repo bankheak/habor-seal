@@ -31,7 +31,7 @@ ggplot(full.data, aes(x=seals)) +
 
 ```
 
-Negative binomial or poisson would be the best fit. Let's check if the mean is equal to the variance.
+Negative binomial or poisson would be the best fit. Let's check if the mean is equal to the variance and if there is zero inflation.
 
 ```{r vartomean, echo=TRUE}
 var(full.data$seals)
@@ -40,11 +40,14 @@ mean(full.data$seals)
 # Make sure overdispersion is detected with full model
 mod<- glm(seals ~ site*noise + month + tide + time, data = full.data, family = "poisson")
 check_overdispersion(mod) 
+# Check for zero inflation
+check_zeroinflation(mod)
 ```
 
-The variance is way higher than the mean which was confirmed by the Pearson chi-squared test, therefore the Poisson distribution is not applicable here and we will continue with the negative binomial distribution.
+The variance is way higher than the mean which was confirmed by the Pearson chi-squared test. Additionally there was zero-inflation present in the model. Therefore the Poisson distribution is not applicable here and we will continue with the negative binomial distribution.
 
 ## Create GLMs and find best model with AICc
+
 To test whether noise affects the number of seals hauled-out by site, I will insert an interaction between noise level and site.
 
 ```{r glm, echo=FALSE}

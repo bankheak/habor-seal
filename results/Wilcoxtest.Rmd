@@ -54,3 +54,18 @@ res<-wilcox.test(full.data$noise[full.data$site == "waterfront"], full.data$nois
 res$p.value
 ```
 The noise levels between sites are significantly different.
+
+## Check average noise levels within sites
+
+```{r avg, echo=TRUE}
+new.w.data<-read.csv("../data/new.w.data.csv")
+m.data<-read.csv("../data/m.data.csv")
+
+# waterfront
+mean(new.w.data$noise)
+
+# marina
+mean(m.data$noise)
+
+```
+
