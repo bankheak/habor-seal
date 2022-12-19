@@ -1,7 +1,7 @@
 ---
 title: "Noise difference between sites"
 author: "Kyra Bankhead"
-output: html_document
+output: pdf_document
 date: "2022-12-16"
 ---
 
@@ -44,7 +44,7 @@ Variences are not equal. Therefore we need to run a wilcox test (U-test).
 
 ## Check Wilcox Test
 
-```{r cars}
+```{r wilcox, echo=FALSE}
 full.data<-read.csv("../data/full.data.csv")
 
 #U-test
