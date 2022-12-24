@@ -118,3 +118,38 @@ newdata
 
 In the output above, we see that the predicted number of seals hauled-out for the Marina is about 17.03, holding noise level at its mean. The predicted number of events for the Waterfront is lower at 8.60.
 
+Below we will obtain the mean predicted number of seals hauled-out for values of noise across its entire range for each site and graph these.
+
+```{r range, echo=FALSE, message=FALSE, warning=FALSE}
+full.data<-read.csv("../data/full.data.csv")
+require(ggplot2)
+
+# Use model to predict the response variable 
+newdata <- data.frame(noise = mean(full.data$noise), 
+                       site = factor(1:2, levels = 1:2, 
+                                      labels = unique(full.data$site)))
+m3<- glm.nb(seals ~ site * noise, data = full.data)
+newdata$phat <- predict.glm(m3, newdata, type = "response")
+newdata
+
+# Plot 
+newdata2 <- data.frame(
+  noise = rep(seq(from = min(full.data$noise), to = max(full.data$noise), length.out = 100), 2),
+  site = factor(rep(1:2, each = 100), levels = 1:2, labels =
+                  unique(full.data$site)))
+
+newdata2 <- cbind(newdata2, predict(m3, newdata2, type = "link", se.fit=TRUE))
+newdata2 <- within(newdata2, {
+  seals <- exp(fit)
+  LL <- exp(fit - 1.96 * se.fit)
+  UL <- exp(fit + 1.96 * se.fit)
+})
+
+ggplot(newdata2, aes(noise, seals)) +
+  geom_ribbon(aes(ymin = LL, ymax = UL, fill = site), alpha = .25) +
+  geom_line(aes(colour = site), linewidth = 2) +
+  labs(x = "Noise Level (dB)", y = "Predicted Number of Seals Hauled-out")
+
+```
+
+The graph shows the log linear model of the expected seals counts across the range of noise levels, for each site along with 95 percent confidence intervals. Note that what is plotted are the expected values, not the log of the expected values.

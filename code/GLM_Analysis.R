@@ -47,13 +47,6 @@ new.w.data<-read.csv("new.w.data.csv")
 new.w.data$date<-as.Date(as.character(new.w.data$date),format = "%m/%d/%Y")
 m.data$date<-as.Date(as.character(m.data$date),format = "%m/%d/%Y")
 
-# Add haul-out size adjustment
-gcf<- 20
-w<-700/gcf
-m<-1180/gcf
-new.w.data$adj.seals<-new.w.data$seals/w
-m.data$adj.seals<-m.data$seals/m
-
 # Merge data
 full.data<-merge(new.w.data,m.data,all = T)
 summary(full.data)
@@ -86,6 +79,9 @@ mean(full.data$seals)
 mod<- glm(seals ~ site*noise + month + tide + time, data = full.data, family = "poisson")
 check_overdispersion(mod) 
 check_zeroinflation(mod)
+# Plot residuals by predicted values
+plot(model3$resid~model3$fitted)
+## Values are zero inflated
 
 ###########################################################################
 # PART 3: Run GLM and AICc---------------------------------------------
@@ -111,20 +107,19 @@ AICc(models) # Looks like site*noise + month + time are the best predictors
 
 summary(model3)
 
-# What does the interaction between site and noise look like?
-interaction.plot(x.factor = full.data$noise, #x-axis variable
-                 trace.factor = full.data$site, #variable for lines
-                 response = full.data$seals, #y-axis variable
-                 fun = median, #metric to plot
-                 ylab = "Number of Seals Hauled-out",
-                 xlab = "Noise Level (dB)",
-                 col = c("pink", "blue"),
-                 lty = 1, #line type
-                 lwd = 2, #line width
-                 trace.label = "Site")
 
 ###########################################################################
-# PART 4: Run Diagnostics---------------------------------------------
+# PART 4: Run without background noise---------------------------------------------
+
+new.w.data$null.noise<- new.w.data$noise-(mean(new.w.data$noise)-2.5)
+m.data$null.noise<- m.data$noise-(mean(m.data$noise)-2.5)
+
+# Merge data
+new.full.model<- merge(new.w.data, m.data, all = T)
+
+
+###########################################################################
+# PART 5: Run Diagnostics---------------------------------------------
 
 # Use model to predict the response variable 
 newdata <- data.frame(noise = mean(full.data$noise), 
@@ -134,11 +129,21 @@ m3<- glm.nb(seals ~ site * noise, data = full.data)
 newdata$phat <- predict.glm(m3, newdata, type = "response")
 newdata
 
-# Plot on top of raw data
-effect_plot(model3, pred = noise, interval = TRUE, partial.residuals = TRUE,
-            jitter = c(0.1, 0), x.label = "Average Noise Level (dB)", 
-            y.label = "Number of Seals Hauled-out")
+# Plot 
+newdata2 <- data.frame(
+  noise = rep(seq(from = min(full.data$noise), to = max(full.data$noise), length.out = 100), 2),
+  site = factor(rep(1:2, each = 100), levels = 1:2, labels =
+                  unique(full.data$site)))
 
-# Plot residuals by predicted values
-plot(model3$resid~model3$fitted)
-## Values are zero inflated
+newdata2 <- cbind(newdata2, predict(m3, newdata2, type = "link", se.fit=TRUE))
+newdata2 <- within(newdata2, {
+  seals <- exp(fit)
+  LL <- exp(fit - 1.96 * se.fit)
+  UL <- exp(fit + 1.96 * se.fit)
+})
+
+ggplot(newdata2, aes(noise, seals)) +
+  geom_ribbon(aes(ymin = LL, ymax = UL, fill = site), alpha = .25) +
+  geom_line(aes(colour = site), linewidth = 2) +
+  labs(x = "Noise Level (dB)", y = "Predicted Number of Seals Hauled-out")
+
