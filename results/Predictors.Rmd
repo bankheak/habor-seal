@@ -1,0 +1,113 @@
+---
+title: "Number of Seals Hauled-out Compared to Canidate Model Predictors"
+author: "Kyra Bankhead"
+output: pdf_document
+date: "2022-12-24"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+In this markdown I will:
+
+1. Look at how month affects the number of hauled-out seals.
+
+2. Look at how time of day affects the number of hauled-out seals.
+
+## Month vs Seals
+
+#### Waterfront
+
+```{r wsealsvmonth, echo=FALSE, message=FALSE, warning=FALSE}
+new.w.data<-read.csv("../data/new.w.data.csv")
+# Load packages
+require(ggplot2)
+
+## Waterfront
+p<-ggplot(new.w.data, aes(x=month,y =seals,group=month))
+p+geom_boxplot(fill="black", alpha=0.2)+
+  xlab("Month")+ylab("Number of Seals")+theme(panel.background = element_blank())
+```
+
+Let's look at the max number of seals and IQR:
+
+```{r wIQR, echo=FALSE, message=FALSE, warning=FALSE}
+new.w.data<-read.csv("../data/new.w.data.csv")
+
+summary(new.w.data$seals[new.w.data$month == 7])
+IQR(new.w.data$seals[new.w.data$month == 7])
+
+```
+
+
+#### Marina
+
+```{r msealsvmonth, echo=FALSE, message=FALSE}
+m.data<-read.csv("../data/m.data.csv")
+# Load packages
+require(ggplot2)
+
+## Marina
+p<-ggplot(m.data, aes(x=month,y =seals,group=month))
+p+geom_boxplot(fill="black", alpha=0.2)+
+  xlab("Month")+ylab("Number of Seals")+theme(panel.background = element_blank())
+```
+
+Let's look at the max number of seals and IQR:
+
+```{r mIQR, echo=FALSE, message=FALSE, warning=FALSE}
+m.data<-read.csv("../data/m.data.csv")
+
+summary(m.data$seals[m.data$month == 8])
+IQR(m.data$seals[m.data$month == 8])
+
+```
+
+## Time of Day vs Seals
+
+#### Waterfront
+
+```{r wsealsvtime}
+new.w.data<-read.csv("../data/new.w.data.csv")
+require(ggplot2)
+
+# Plot 
+p<-ggplot(new.w.data, aes(x = time, y = seals, group = time))
+p+geom_boxplot(fill="black", alpha=0.2)+
+  xlab("Time of Day")+ylab("Number of Seals")+theme(panel.background = element_blank())
+
+```
+
+Let's look at the max number of seals and IQR:
+
+```{r wtimeIQR, echo=FALSE, message=FALSE, warning=FALSE}
+new.w.data<-read.csv("../data/new.w.data.csv")
+
+summary(new.w.data$seals[new.w.data$time == 16])
+IQR(new.w.data$seals[new.w.data$time == 16])
+
+```
+
+#### Marina
+
+```{r msealsvtime}
+m.data<-read.csv("../data/m.data.csv")
+require(ggplot2)
+
+# Plot 
+p<-ggplot(m.data, aes(x = time, y = seals, group = time))
+p+geom_boxplot(fill="black", alpha=0.2)+
+  xlab("Time of Day")+ylab("Number of Seals")+theme(panel.background = element_blank())
+
+```
+
+Let's look at the max number of seals and IQR:
+
+```{r mtimeIQR, echo=FALSE, message=FALSE, warning=FALSE}
+m.data<-read.csv("../data/m.data.csv")
+
+summary(m.data$seals[m.data$time == 8])
+IQR(m.data$seals[m.data$time == 8])
+
+```

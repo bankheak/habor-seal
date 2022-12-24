@@ -62,6 +62,7 @@ t.test(w.data$noise[w.data$location == 1], w.data$noise[w.data$location == 2])
 ```
 
 Now that I know the two waterfront locations don't have significantly different noise levels, I can merge the two locations by:
+
 * Summing the number of seals hauled-out
 * Combining the average noise level
 
@@ -84,6 +85,7 @@ full.data$month<-as.numeric(full.data$month)
 ```
 
 ### Check Collinearity
+
 ```{r collin, echo=FALSE}
 full.data<-read.csv("../data/full.data.csv")
 

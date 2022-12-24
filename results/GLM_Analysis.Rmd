@@ -53,10 +53,11 @@ The variance is way higher than the mean which was confirmed by the Pearson chi-
 
 To test whether noise affects the number of seals hauled-out by site, I will insert an interaction between noise level and site.
 
-```{r glm, echo=FALSE}
+```{r glm, echo=FALSE, message=FALSE, warning=FALSE}
 full.data<-read.csv("../data/full.data.csv")
 # Load packages
 require(MASS) #for glm.nb()
+require(AICcmodavg) #for AICc
 
 model1<- glm.nb(seals ~ 1, data = full.data)
 model2<- glm.nb(seals ~ site*noise + month + tide + time, data = full.data)
@@ -65,11 +66,17 @@ model4<- glm.nb(seals ~ site*noise + month, data = full.data)
 # Create list
 models<-list(model1, model2, model3, model4)
 
-## Find the AICc function
-source("../code/Functions.R")
-
 ## Calculate AICc with glm of models
-AICc(models) # Looks like site*noise + month + time are the best predictors
+Modnames<- c("seals ~ 1",
+             "seals ~ site*noise + month + tide + time",
+             "seals ~ site*noise + month + time",
+             "seals ~ site*noise + month")
+
+aictab(models, modnames = Modnames,
+                  second.ord = TRUE, 
+                  nobs = NULL, sort = TRUE, c.hat = 1) # Looks like site*noise + month + time are the best predictors
+
+
 ```
 
 Looks like the best model will contain month, noise, site and time as predictors. This is the summary of that model:

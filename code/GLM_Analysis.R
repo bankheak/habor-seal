@@ -15,6 +15,7 @@ w.data<-read.csv("w.data.csv")
 require(ggplot2)
 require(MASS) #for glm.nb()
 require(performance)
+require(AICcmodavg) #for AICc
 
 ###########################################################################
 # PART 1: Check Location Significance at Waterfront ---------------------------------------------
@@ -99,12 +100,17 @@ summary(model4)
 # Create list
 models<-list(model1, model2, model3, model4)
 
-## Find the AICc function
-source("../code/Functions.R")
-
 ## Calculate AICc with glm of models
-AICc(models) # Looks like site*noise + month + time are the best predictors
+Modnames<- c("seals ~ 1",
+             "seals ~ site*noise + month + tide + time",
+             "seals ~ site*noise + month + time",
+             "seals ~ site*noise + month")
 
+aictable<- aictab(models, modnames = Modnames,
+                  second.ord = TRUE, 
+                  nobs = NULL, sort = TRUE, c.hat = 1) # Looks like site*noise + month + time are the best predictors
+
+# Find significant predictors and summary of model3
 summary(model3)
 
 
