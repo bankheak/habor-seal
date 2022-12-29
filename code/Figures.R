@@ -10,9 +10,12 @@ setwd("C:/Users/bankh/My_Repos/habor-seal/data")
 # Retrieve data
 m.data<-read.csv("m.data.csv")
 new.w.data<-read.csv("new.w.data.csv")
+full.data<-read.csv("full.data.csv")
+newdata2<- read.csv("newdata2")
 
 # Load packages
 require(ggplot2)
+require(MASS)
 
 ###########################################################################
 # PART 1: Distribution---------------------------------------------
@@ -45,7 +48,12 @@ k + scale_x_discrete(limits = c(6,7,8,9,10,11),
 ###########################################################################
 # PART 3: Noise graph---------------------------------------------
 
-
+x.order <- c('Waterfront', 'Marina')
+ggplot(full.data, aes(x = site, y = noise)) +
+  geom_violin(fill = "grey") + geom_boxplot(width = .2) +
+  xlab("Site")+ylab("Average Noise Level (dB)") +
+  scale_x_discrete(limit = c("waterfront", "marina"),labels = c("Waterfront","Marina")) +
+  theme(panel.background = element_blank())
 
 ###########################################################################
 # PART 4: Seal vs noise graph---------------------------------------------
@@ -59,4 +67,13 @@ ggplot(new.w.data, aes(noise,seals))+geom_point()+geom_smooth(method = "gam", fo
 ggplot(m.data, aes(noise,seals))+geom_point()+geom_smooth(method = "gam", formula =seals~s(noise))+
   stat_smooth(method="gam",colour="black")+xlab("Average Noise Level (dB)")+ylab("Number of Seals Hauled-out")+
   coord_trans(x = "log10")+theme(panel.background = element_blank())
+
+###########################################################################
+# PART 5: Seal vs noise graph---------------------------------------------
+
+ggplot(newdata2, aes(noise, seals)) +
+  geom_ribbon(aes(ymin = LL, ymax = UL, fill = site), alpha = .25) +
+  geom_line(aes(colour = site, linetype = site), linewidth = 1) +
+  labs(x = "Noise Level (dB)", y = "Predicted Number of Seals Hauled-out") +
+  theme(panel.background = element_blank())
 

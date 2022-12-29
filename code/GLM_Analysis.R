@@ -148,6 +148,8 @@ newdata2 <- within(newdata2, {
   UL <- exp(fit + 1.96 * se.fit)
 })
 
+write.csv(newdata2, "newdata2.csv")
+
 ggplot(newdata2, aes(noise, seals)) +
   geom_ribbon(aes(ymin = LL, ymax = UL, fill = site), alpha = .25) +
   geom_line(aes(colour = site), linewidth = 2) +
