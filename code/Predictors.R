@@ -32,20 +32,24 @@ IQR(m.data$seals[m.data$month == 8])
 ###########################################################################
 # PART 2: Check Time of Day Significance on Seals ---------------------------------------------
 
+# Separate time into morning, afternoon and evening
+new.w.data$new.time<- ifelse(new.w.data$time > 15, "Evening", ifelse(new.w.data$time > 11, "Afternoon", "Morning"))
+m.data$new.time<- ifelse(m.data$time > 15, "Evening", ifelse(m.data$time > 11, "Afternoon", "Morning"))
+
 # Waterfront
-p<-ggplot(new.w.data, aes(x = time, y = seals, group = time))
+p<-ggplot(new.w.data, aes(x = new.time, y = seals, group = new.time))
 p+geom_boxplot(fill="black", alpha=0.2)+
   xlab("Time of Day")+ylab("Number of Seals")+theme(panel.background = element_blank())
 ## IQR
-length(new.w.data$seals[new.w.data$time == 16])
-summary(new.w.data$seals[new.w.data$time == 16])
-IQR(new.w.data$seals[new.w.data$time == 16])
+length(new.w.data$seals[new.w.data$new.time == "Afternoon"])
+summary(new.w.data$seals[new.w.data$new.time == "Afternoon"])
+IQR(new.w.data$seals[new.w.data$new.time == "Afternoon"])
 
 # Marina
-j<-ggplot(m.data, aes(x = time, y = seals, group = time))
+j<-ggplot(m.data, aes(x = new.time, y = seals, group = new.time))
 j+geom_boxplot(fill="black", alpha=0.2)+
   xlab("Time of Day")+ylab("Number of Seals")+theme(panel.background = element_blank())
 ## IQR
-length(m.data$seals[m.data$time == 15])
-summary(m.data$seals[m.data$time == 15])
-IQR(m.data$seals[m.data$time == 15])
+length(m.data$seals[m.data$new.time == "Afternoon"])
+summary(m.data$seals[m.data$new.time == "Afternoon"])
+IQR(m.data$seals[m.data$new.time == "Afternoon"])

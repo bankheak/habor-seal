@@ -70,3 +70,14 @@ mean(m.data$noise)
 sd(m.data$noise)
 ```
 
+```{r graph}
+full.data<-read.csv("../data/full.data.csv")
+require(ggplot2)
+
+#Violin of Noise
+x.order <- c('Waterfront', 'Marina')
+ggplot(full.data, aes(x = site, y = noise)) +
+  geom_violin(fill = "grey")+ geom_boxplot(width = .2)+xlab("Site")+ylab("Average Noise Level (dB)")+scale_x_discrete(limit = c("waterfront", "marina"),labels = c("Waterfront","Marina"))+theme(panel.background = element_blank())
+
+```
+

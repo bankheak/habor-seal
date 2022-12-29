@@ -108,7 +108,7 @@ Modnames<- c("seals ~ 1",
 
 aictable<- aictab(models, modnames = Modnames,
                   second.ord = TRUE, 
-                  nobs = NULL, sort = TRUE, c.hat = 1) # Looks like site*noise + month + time are the best predictors
+                  nobs = NULL, c.hat = 1) # Looks like site*noise + month + time are the best predictors
 
 # Find significant predictors and summary of model3
 summary(model3)
