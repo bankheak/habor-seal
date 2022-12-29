@@ -9,4 +9,4 @@ To determine potential impacts of anthropogenic noise on haul-out behavior, we c
 - [Code](https://github.com/bankheak/habor-seal/tree/main/code)
 - [Results](https://github.com/bankheak/habor-seal/tree/main/results)
 - [Manuscript](https://github.com/bankheak/habor-seal/tree/main/ms)
-- Figures
+- [Figures](https://github.com/bankheak/harbor-seal/tree/main/figures)
