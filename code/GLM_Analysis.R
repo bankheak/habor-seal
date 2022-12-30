@@ -13,7 +13,7 @@ w.data<-read.csv("w.data.csv")
 
 # Load packages
 require(ggplot2)
-require(MASS) #for glm.nb()
+require(geepack) #for gee()
 require(performance)
 require(AICcmodavg) #for AICc
 
@@ -47,12 +47,20 @@ new.w.data<-read.csv("new.w.data.csv")
 # Fix date
 new.w.data$date<-as.Date(as.character(new.w.data$date),format = "%m/%d/%Y")
 m.data$date<-as.Date(as.character(m.data$date),format = "%m/%d/%Y")
+new.w.data[order(as.Date(new.w.data$date, format="%m/%d/%Y")), ]
+m.data[order(as.Date(m.data$date, format="%m/%d/%Y")), ]
+new.w.data$j.date<- as.integer(new.w.data$j.date)
+m.data$j.date<- as.integer(m.data$j.date)
+new.w.data$id<- seq_along(new.w.data[,1])
+m.data$id<- seq_along(m.data[,1])
+
 
 # Merge data
 full.data<-merge(new.w.data,m.data,all = T)
 summary(full.data)
 full.data$time<-as.numeric(full.data$time)
 full.data$month<-as.numeric(full.data$month)
+
 ## Create csv
 write.csv(full.data,"full.data")
 full.data<- read.csv("full.data.csv")
@@ -84,8 +92,20 @@ check_zeroinflation(mod)
 plot(model3$resid~model3$fitted)
 ## Values are zero inflated
 
+
 ###########################################################################
-# PART 3: Run GLM and AICc---------------------------------------------
+# PART 3: Check Temporal Autocorrelation---------------------------------------------
+
+# Get rid of absent seal days
+df <- subset(full.data, seals > 0) 
+
+# Run acf
+acf(df$seals[df$site == "waterfront"]) # Highly autocorrelated
+acf(df$seals[df$site == "marina"]) # Highly autocorrelated
+
+
+###########################################################################
+# PART 4: Run GEE and AICc---------------------------------------------
 
 # Check GLM
 model1<- glm.nb(seals ~ 1, data = full.data)
@@ -115,7 +135,7 @@ summary(model3)
 
 
 ###########################################################################
-# PART 4: Run without background noise---------------------------------------------
+# PART 5: Run without background noise---------------------------------------------
 
 new.w.data$null.noise<- new.w.data$noise-(mean(new.w.data$noise)-2.5)
 m.data$null.noise<- m.data$noise-(mean(m.data$noise)-2.5)
@@ -125,7 +145,7 @@ new.full.model<- merge(new.w.data, m.data, all = T)
 
 
 ###########################################################################
-# PART 5: Run Diagnostics---------------------------------------------
+# PART 6: Run Predict Function---------------------------------------------
 
 # Use model to predict the response variable 
 newdata <- data.frame(noise = mean(full.data$noise), 

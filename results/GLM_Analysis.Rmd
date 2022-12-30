@@ -49,6 +49,20 @@ check_zeroinflation(mod)
 
 The variance is way higher than the mean which was confirmed by the Pearson chi-squared test. Additionally there was zero-inflation present in the model. Therefore the Poisson distribution is not applicable here and we will continue with the negative binomial distribution.
 
+## Check for autocorrelation
+
+```{r auto, echo=FALSE}
+full.data<- read.csv("../data/full.data.csv")
+
+df <- subset(full.data, seals > 0 )
+
+# Run acf
+acf(df$seals[df$site == "waterfront"]) # Highly autocorrelated
+acf(df$seals[df$site == "marina"]) # Highly autocorrelated
+```
+
+The x-axis corresponds to the different lags of the residuals. The y-axis shows the correlation of each lag. Finally, the dashed blue line represents the significance level. Both sites show high autocorrelation. However, there is no way to incorporate overdispersion into a model that incorporates autocorrelation such as GEEs. Therefore we will stick with GLMs.
+
 ## Create GLMs and find best model with AICc
 
 To test whether noise affects the number of seals hauled-out by site, I will insert an interaction between noise level and site.
