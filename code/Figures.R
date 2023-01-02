@@ -55,21 +55,9 @@ ggplot(full.data, aes(x = site, y = noise)) +
   scale_x_discrete(limit = c("waterfront", "marina"),labels = c("Waterfront","Marina")) +
   theme(panel.background = element_blank())
 
+
 ###########################################################################
 # PART 4: Seal vs noise graph---------------------------------------------
-
-## Waterfront
-ggplot(new.w.data, aes(noise,seals))+geom_point()+geom_smooth(method = "gam", formula =seals~s(noise))+
-  stat_smooth(method="gam",colour="black")+xlab("Average Noise Level (dB)")+ylab("Number of Seals Hauled-out")+
-  coord_trans(x = "log10")+theme(panel.background = element_blank())
-
-## Marina
-ggplot(m.data, aes(noise,seals))+geom_point()+geom_smooth(method = "gam", formula =seals~s(noise))+
-  stat_smooth(method="gam",colour="black")+xlab("Average Noise Level (dB)")+ylab("Number of Seals Hauled-out")+
-  coord_trans(x = "log10")+theme(panel.background = element_blank())
-
-###########################################################################
-# PART 5: Seal vs noise graph---------------------------------------------
 
 ggplot(newdata2, aes(noise, seals)) +
   geom_ribbon(aes(ymin = LL, ymax = UL, fill = site), alpha = .25) +

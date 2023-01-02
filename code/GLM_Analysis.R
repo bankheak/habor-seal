@@ -58,8 +58,6 @@ m.data$id<- seq_along(m.data[,1])
 # Merge data
 full.data<-merge(new.w.data,m.data,all = T)
 summary(full.data)
-full.data$time<-as.numeric(full.data$time)
-full.data$month<-as.numeric(full.data$month)
 
 ## Create csv
 write.csv(full.data,"full.data")
@@ -92,12 +90,12 @@ check_zeroinflation(mod)
 plot(model3$resid~model3$fitted)
 ## Values are zero inflated
 
-
-###########################################################################
-# PART 3: Check Temporal Autocorrelation---------------------------------------------
+# Check Temporal Autocorrelation
 
 # Get rid of absent seal days
 df <- subset(full.data, seals > 0) 
+# Add binary seal count
+full.data$presence<- ifelse(full.data$seals > 0, 1, 0)
 
 # Run acf
 acf(df$seals[df$site == "waterfront"]) # Highly autocorrelated
@@ -105,7 +103,7 @@ acf(df$seals[df$site == "marina"]) # Highly autocorrelated
 
 
 ###########################################################################
-# PART 4: Run GEE and AICc---------------------------------------------
+# PART 3: Run GLM and AICc---------------------------------------------
 
 # Check GLM
 model1<- glm.nb(seals ~ 1, data = full.data)
@@ -135,17 +133,7 @@ summary(model3)
 
 
 ###########################################################################
-# PART 5: Run without background noise---------------------------------------------
-
-new.w.data$null.noise<- new.w.data$noise-(mean(new.w.data$noise)-2.5)
-m.data$null.noise<- m.data$noise-(mean(m.data$noise)-2.5)
-
-# Merge data
-new.full.model<- merge(new.w.data, m.data, all = T)
-
-
-###########################################################################
-# PART 6: Run Predict Function---------------------------------------------
+# PART 4: Run Predict Function---------------------------------------------
 
 # Use model to predict the response variable 
 newdata <- data.frame(noise = mean(full.data$noise), 

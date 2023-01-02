@@ -1,5 +1,5 @@
 ---
-title: "Noise difference between sites"
+title: "Noise Difference Between Sites"
 author: "Kyra Bankhead"
 output: pdf_document
 date: "2022-12-16"
@@ -15,6 +15,8 @@ In this markdown I will:
 
 2. Run a wilcox test on the noise levels between sites.
 
+3. Graph the differences in noise levels between sites.
+
 ## Check t-test assumptions
 
 ### Are the noise levels normal within sites?
@@ -27,7 +29,9 @@ hist(full.data$noise[full.data$site == "waterfront"], breaks = 15, main = "Water
 # marina
 hist(full.data$noise[full.data$site == "marina"], breaks = 15, main = "Marina", xlab = "Noise Level (dB)")
 ```
+
 The marina site has nonnormality in noise levels.
+
 
 ### Are the noise level variences equal between sites?
 
@@ -40,7 +44,9 @@ var(full.data$noise[full.data$site == "waterfront"])
 # marina
 var(full.data$noise[full.data$site == "marina"])
 ```
+
 Variences are not equal. Therefore we need to run a wilcox test (U-test).
+
 
 ## Check Wilcox Test
 
@@ -54,6 +60,7 @@ res<-wilcox.test(full.data$noise[full.data$site == "waterfront"], full.data$nois
 res$p.value
 ```
 The noise levels between sites are significantly different.
+
 
 ## Check average and standard devition noise levels within sites
 
@@ -70,7 +77,9 @@ mean(m.data$noise)
 sd(m.data$noise)
 ```
 
-```{r graph}
+## Graph these differences in a violin plot
+
+```{r graph, echo=FALSE, message=FALSE, warning=FALSE}
 full.data<-read.csv("../data/full.data.csv")
 require(ggplot2)
 
