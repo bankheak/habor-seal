@@ -13,9 +13,13 @@ w.data<-read.csv("w.data.csv")
 
 # Load packages
 require(ggplot2)
-require(geepack) #for gee()
 require(performance)
 require(AICcmodavg) #for AICc
+require(glmmTMB) # for glmm
+require(MASS) # for glm
+require(mgcv) # for GAMM
+require(remotes)
+
 
 ###########################################################################
 # PART 1: Check Location Significance at Waterfront ---------------------------------------------
@@ -47,13 +51,12 @@ new.w.data<-read.csv("new.w.data.csv")
 # Fix date
 new.w.data$date<-as.Date(as.character(new.w.data$date),format = "%m/%d/%Y")
 m.data$date<-as.Date(as.character(m.data$date),format = "%m/%d/%Y")
-new.w.data[order(as.Date(new.w.data$date, format="%m/%d/%Y")), ]
-m.data[order(as.Date(m.data$date, format="%m/%d/%Y")), ]
 new.w.data$j.date<- as.integer(new.w.data$j.date)
-m.data$j.date<- as.integer(m.data$j.date)
+m.data$j.date<- as.integer(.data$j.date)
+
+# Add sample ID
 new.w.data$id<- seq_along(new.w.data[,1])
 m.data$id<- seq_along(m.data[,1])
-
 
 # Merge data
 full.data<-merge(new.w.data,m.data,all = T)
@@ -65,7 +68,7 @@ full.data<- read.csv("full.data.csv")
 
 # Run pairwise cor between all independent variables
 ## Cut-off is +/- 0.7
-cor.matrix<-cor(full.data[,c(2:4,6:7)]) 
+cor.matrix<-cor(full.data[,c(2:4,6:7,9)]) 
 # Keep only large correlations in the same model
 cor.matrix[abs(cor.matrix)< 0.7]<-NA
 cor.matrix
@@ -82,37 +85,40 @@ var(full.data$seals)
 mean(full.data$seals)
 ### Variance is way higher than the mean
 
-### Make sure overdispersion is detected with full model
-mod<- glm(seals ~ site*noise + month + tide + time, data = full.data, family = "poisson")
+### Check if overdispersion is detected with full model
+mod<- glm.nb(seals ~ site*noise + month + tide + time, data = full.data)
 check_overdispersion(mod) 
-check_zeroinflation(mod)
+summary(mod)
+
+### Check if data is zero inflated 
+check_zeroinflation(mod, tolerance = 0.05)
 # Plot residuals by predicted values
-plot(model3$resid~model3$fitted)
+plot(mod$resid~mod$fitted)
 ## Values are zero inflated
 
 # Check Temporal Autocorrelation
-
-# Get rid of absent seal days
-df <- subset(full.data, seals > 0) 
-# Add binary seal count
-full.data$presence<- ifelse(full.data$seals > 0, 1, 0)
-
-# Run acf
-acf(df$seals[df$site == "waterfront"]) # Highly autocorrelated
-acf(df$seals[df$site == "marina"]) # Highly autocorrelated
+## Organize data by id
+full.data<- full.data[order(full.data$id), ]
+## Run acf for both direct and indirect effects
+acf(full.data$seals[full.data$site == "waterfront"]) # Highly autocorrelated at lag of 1
+acf(full.data$seals[full.data$site == "marina"]) # Autocorrelated at lag of 7
 
 
 ###########################################################################
-# PART 3: Run GLM and AICc---------------------------------------------
-
-# Check GLM
-model1<- glm.nb(seals ~ 1, data = full.data)
+# PART 3: Run GAMs and QIC---------------------------------------------
+  
+# Run GAMs
+model1<- zinb(list(seals ~ noise * site,
+                  ~ 1), data = full.data, family = ziplss())
 summary(model1) 
-model2<- glm.nb(seals ~ site*noise + month + tide + time, data = full.data)
+model2<- gam(seals ~ s(noise, by = site) + s(month) + s(tide) + s(time), 
+                data = full.data, family = nbinom2(), method = "REML")
 summary(model2) 
-model3<- glm.nb(seals ~ site*noise + month + time, data = full.data)
+model3<- gam(seals ~ s(noise, by = site) + s(month) + s(time), 
+             data = full.data, family = ziplss, method = "REML")
 summary(model3) 
-model4<- glm.nb(seals ~ site*noise + month, data = full.data)
+model4<- gam(seals ~ s(noise, by = site) + s(month), 
+             data = full.data, family = ziplss, method = "REML")
 summary(model4) 
 
 # Create list
@@ -124,6 +130,7 @@ Modnames<- c("seals ~ 1",
              "seals ~ site*noise + month + time",
              "seals ~ site*noise + month")
 
+qictable<- QIC(model1, model2, model3, model4)
 aictable<- aictab(models, modnames = Modnames,
                   second.ord = TRUE, 
                   nobs = NULL, c.hat = 1) # Looks like site*noise + month + time are the best predictors
