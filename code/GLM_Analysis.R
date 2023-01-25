@@ -60,6 +60,7 @@ m.data$id<- seq_along(m.data[,1])
 
 # Merge data
 full.data<-merge(new.w.data,m.data,all = T)
+full.data$site<- as.numeric(full.data$site=="waterfront")
 summary(full.data)
 
 ## Create csv
@@ -78,17 +79,25 @@ cor.matrix
 ggplot(full.data, aes(x=seals)) + 
   geom_histogram(aes(y=..density..), colour="black", fill="white")+
   geom_density()+stat_density(alpha=.2,adjust = 1, fill="#FF6666")+xlab("Number of Seals Hauled-out")+ylab("Density")+theme(panel.background = element_blank())
-## Negative binomial or poisson would be the best fit
 
 ## Does the mean equal the variance?
 var(full.data$seals)
 mean(full.data$seals)
 ### Variance is way higher than the mean
 
-### Check if overdispersion is detected with full model
-mod<- glm.nb(seals ~ site*noise + month + tide + time, data = full.data)
-check_overdispersion(mod) 
+## Negative binomial or poisson would be the best fit
+mod<- glm.nb(seals ~ site*noise + month, data = full.data)
 summary(mod)
+
+## Plot lines
+attach(full.data)
+plot(noise[site==1],seals[site==1],type="p",pch=paste(1), col="blue", xlim=c(min(noise),max(noise)), ylim=c(min(seals),max(seals)), xlab="Noise",ylab="Seals") 
+abline(glm.nb(seals[site==1]~noise[site==1]),col="blue") # add regression line for polymer 1
+points(noise[site==0],seals[site==0],type="p",pch=paste(2), col="red") # add points corresponding to polymer 2
+abline(glm.nb(seals[site==0]~noise[site==0]),col="red") # add regression line for polymer 2
+
+## Check if overdispersion is detected with full model
+check_overdispersion(mod) 
 
 ### Check if data is zero inflated 
 check_zeroinflation(mod, tolerance = 0.05)
