@@ -12,6 +12,10 @@ full.mdata<-read.csv("full.mdata.csv")
 
 # Load packages
 require(ggplot2)
+require(performance) # for overdispersion
+require(AICcmodavg) #for AICc
+require(MASS) # for glm
+require(DHARMa) # auto cor and zero-inflation
 
 ###########################################################################
 # PART 1: Find distribution---------------------------------------------
@@ -28,7 +32,19 @@ cor.matrix
 ggplot(full.mdata, aes(x=seals)) + 
   geom_histogram(aes(y=..density..), colour="black", fill="white")+
   geom_density()+stat_density(alpha=.2,adjust = 1, fill="#FF6666")+xlab("Number of Seals Hauled-out")+ylab("Density")+theme(panel.background = element_blank())
-## Quasipoisson would be the best fit
+## Poisson or NB would be the best fit
+
+## Does the mean equal the variance?
+var(full.mdata$seals)
+mean(full.mdata$seals)
+### Variance is way higher than the mean
+
+## Check if overdispersion is detected with full model
+check_overdispersion(mod) 
+
+### Check if data is zero inflated 
+testZeroInflation(simulationOutput) 
+### Data is zero-inflated
 
 ###########################################################################
 # PART 2: Run GLM and AICc ---------------------------------------------

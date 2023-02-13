@@ -13,8 +13,8 @@ AICc <- function(x){
   }
   colnames(AIC.table)<- c("N","df","AICc")
   rownames(AIC.table)<- c("seals ~ 1",
-                          "seals ~ site*noise + month + tide + time",
-                          "seals ~ site*noise + month + time",
-                          "seals ~ site*noise + month")
+                          "seals ~ site*noise + tide + time",
+                          "seals ~ site*noise + time",
+                          "seals ~ site*noise")
   return(AIC.table)
 }

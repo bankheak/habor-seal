@@ -11,9 +11,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 In this markdown I will:
 
-1. Find the best distribution to use for GLMs.
+1. Find the best distribution to use for GLMMs.
 
-2. Run GLMS and AICs to find the most appropriate model and predictors.
+2. Run GLMMs and AICcs to find the most appropriate model and predictors.
 
 3. Create visualization graphs for each site.
 
@@ -53,38 +53,51 @@ The variance is way higher than the mean which was confirmed by the Pearson chi-
 
 ```{r auto, echo=FALSE}
 full.data<- read.csv("../data/full.data.csv")
+require(glmmTMB) # for glmm
+require(DHARMa) # auto cor and zero-inflation
 
-df <- subset(full.data, seals > 0 )
+# Check Temporal Autocorrelation
+## Run acf for both direct and indirect effects
+acf(full.data$seals[full.data$site == "waterfront"]) # Highly autocorrelated at lag of 1
+acf(full.data$seals[full.data$site == "marina"]) # Autocorrelated at lag of 6
 
-# Run acf
-acf(df$seals[df$site == "waterfront"]) # Highly autocorrelated
-acf(df$seals[df$site == "marina"]) # Highly autocorrelated
+# Correct for autocorrelation with ar1()
+fittedModel<- glmmTMB(seals ~ noise*site + tide + time + (1 | date) +
+                          ar1(as.factor(month) + 0 | year), data = full.data, 
+        family = nbinom2, zi = ~ 1)
+res = simulateResiduals(fittedModel)
+testTemporalAutocorrelation(res, time = unique(full.data$obs_id))
+
 ```
 
-The x-axis corresponds to the different lags of the residuals. The y-axis shows the correlation of each lag. Finally, the dashed blue line represents the significance level. Both sites show high autocorrelation. However, there is no way to incorporate overdispersion into a model that incorporates autocorrelation such as GEEs. Therefore we will stick with GLMs.
+The x-axis corresponds to the different lags of the residuals. The y-axis shows the correlation of each lag. Finally, the dashed blue line represents the significance level. Both sites show high autocorrelation. Therefore I have incorporated a ar1() effect between month and year to correct for the correlation between observations as seen in the third graph. 
 
-## Create GLMs and find best model with AICc
+## Create GLMMs and find best model with AICc
 
 To test whether noise affects the number of seals hauled-out by site, I will insert an interaction between noise level and site.
 
 ```{r glm, echo=FALSE, message=FALSE, warning=FALSE}
 full.data<-read.csv("../data/full.data.csv")
 # Load packages
-require(MASS) #for glm.nb()
+require(glmmTMB) # for glmm
 require(AICcmodavg) #for AICc
 
-model1<- glm.nb(seals ~ 1, data = full.data)
-model2<- glm.nb(seals ~ site*noise + month + tide + time, data = full.data)
-model3<- glm.nb(seals ~ site*noise + month + time, data = full.data)
-model4<- glm.nb(seals ~ site*noise + month, data = full.data)
+model0<- glmmTMB(seals ~ 1, data = full.data, 
+                 family = nbinom2, zi = ~ 1)
+model1<- glmmTMB(seals ~ noise*site + tide + time + (1 | date) +
+                        ar1(as.factor(month) + 0 | year), data = full.data, family = nbinom2, zi = ~ 1)
+model2<- glmmTMB(seals ~ noise*site +  (1 | date) + time +
+                   ar1(as.factor(month) + 0 | year), data = full.data, family = nbinom2, zi = ~ 1)
+model3<- glmmTMB(seals ~ noise*site + (1 | date) + 
+                   ar1(as.factor(month) + 0 | year), data = full.data, family = nbinom2, zi = ~ 1)
 # Create list
-models<-list(model1, model2, model3, model4)
+models<-list(model0, model1, model2, model3)
 
 ## Calculate AICc with glm of models
 Modnames<- c("seals ~ 1",
-             "seals ~ site*noise + month + tide + time",
-             "seals ~ site*noise + month + time",
-             "seals ~ site*noise + month")
+             "seals ~ site*noise + tide + time",
+             "seals ~ site*noise + time",
+             "seals ~ site*noise")
 
 aictab(models, modnames = Modnames,
                   second.ord = TRUE, 
@@ -98,9 +111,10 @@ Looks like the best model will contain month, noise, site and time as predictors
 ```{r model, echo=FALSE}
 full.data<-read.csv("../data/full.data.csv")
 # Load packages
-require(MASS) #for glm.nb()
+require(glmmTMB) # for glmm
 
-model3<- glm.nb(seals ~ site*noise + month + time, data = full.data)
+model3<- glmmTMB(seals ~ noise*site + (1 | date) + 
+                   ar1(as.factor(month) + 0 | year), data = full.data, family = nbinom2, zi = ~ 1)
 summary(model3) 
 ```
 

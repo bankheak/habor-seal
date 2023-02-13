@@ -13,12 +13,11 @@ w.data<-read.csv("w.data.csv")
 
 # Load packages
 require(ggplot2)
-require(performance)
+require(performance) # for overdispersion
 require(AICcmodavg) #for AICc
 require(glmmTMB) # for glmm
 require(MASS) # for glm
-require(mgcv) # for GAMM
-require(remotes)
+require(DHARMa) # auto cor and zero-inflation
 
 
 ###########################################################################
@@ -52,7 +51,12 @@ new.w.data<-read.csv("new.w.data.csv")
 new.w.data$date<-as.Date(as.character(new.w.data$date),format = "%m/%d/%Y")
 m.data$date<-as.Date(as.character(m.data$date),format = "%m/%d/%Y")
 new.w.data$j.date<- as.integer(new.w.data$j.date)
-m.data$j.date<- as.integer(.data$j.date)
+new.w.data$j.date<- ifelse(new.w.data$j.date == min(new.w.data$j.date),0, new.w.data$j.date-min(new.w.data$j.date))
+m.data$j.date<- as.integer(m.data$j.date)
+m.data$j.date<- ifelse(m.data$j.date == min(m.data$j.date),0, m.data$j.date-min(m.data$j.date))
+new.w.data$year <-as.numeric(format(new.w.data$date, format = "%Y"))
+m.data$year <-as.numeric(format(m.data$date, format = "%Y"))
+
 
 # Add sample ID
 new.w.data$id<- seq_along(new.w.data[,1])
@@ -63,8 +67,13 @@ full.data<-merge(new.w.data,m.data,all = T)
 full.data$site<- as.numeric(full.data$site=="waterfront")
 summary(full.data)
 
+## Organize data by id
+full.data<- full.data[order(full.data$id), ]
+full.data$obs_id<- seq_along(full.data[,1])
+full.data<- full.data[order(full.data$obs_id), ]
+
 ## Create csv
-write.csv(full.data,"full.data")
+write.csv(full.data,"full.data.csv")
 full.data<- read.csv("full.data.csv")
 
 # Run pairwise cor between all independent variables
@@ -86,66 +95,79 @@ mean(full.data$seals)
 ### Variance is way higher than the mean
 
 ## Negative binomial or poisson would be the best fit
-mod<- glm.nb(seals ~ site*noise + month, data = full.data)
+mod<- glmmTMB(seals ~ noise*site + (1 | month), data = full.data, 
+        family = nbinom2, zi = ~ 1)
 summary(mod)
+simulationOutput <- simulateResiduals(fittedModel = model1)
 
-## Plot lines
-attach(full.data)
-plot(noise[site==1],seals[site==1],type="p",pch=paste(1), col="blue", xlim=c(min(noise),max(noise)), ylim=c(min(seals),max(seals)), xlab="Noise",ylab="Seals") 
-abline(glm.nb(seals[site==1]~noise[site==1]),col="blue") # add regression line for polymer 1
-points(noise[site==0],seals[site==0],type="p",pch=paste(2), col="red") # add points corresponding to polymer 2
-abline(glm.nb(seals[site==0]~noise[site==0]),col="red") # add regression line for polymer 2
+# Test for homogeneity of variance
+testCategorical(simulationOutput, full.data$site)
 
 ## Check if overdispersion is detected with full model
 check_overdispersion(mod) 
 
 ### Check if data is zero inflated 
-check_zeroinflation(mod, tolerance = 0.05)
-# Plot residuals by predicted values
-plot(mod$resid~mod$fitted)
-## Values are zero inflated
+testZeroInflation(simulationOutput) 
+### Data is zero-inflated
 
 # Check Temporal Autocorrelation
-## Organize data by id
-full.data<- full.data[order(full.data$id), ]
 ## Run acf for both direct and indirect effects
 acf(full.data$seals[full.data$site == "waterfront"]) # Highly autocorrelated at lag of 1
-acf(full.data$seals[full.data$site == "marina"]) # Autocorrelated at lag of 7
+acf(full.data$seals[full.data$site == "marina"]) # Autocorrelated at lag of 6
+
+### Check Residuals of Month
+fit1<- lm(seals~ month + year, data = full.data)
+plot(full.data$month, fit1$res, pch=20, col="blue")
+abline(h=0) # Add the horizontal line at 0
+
+# Correct for autocorrelation with ar1()
+fittedModel<- glmmTMB(seals ~ noise*site + tide + time + (1 | date) +
+                          ar1(as.factor(j.date) + 0 | month), data = full.data, 
+        family = nbinom2, zi = ~ 1)
+res = simulateResiduals(fittedModel)
+testTemporalAutocorrelation(res, time = unique(full.data$obs_id))
 
 
 ###########################################################################
-# PART 3: Run GAMs and QIC---------------------------------------------
+# PART 3: Run glmmTMB and AICc---------------------------------------------
   
-# Run GAMs
-model1<- zinb(list(seals ~ noise * site,
-                  ~ 1), data = full.data, family = ziplss())
+# Run glmmTMB
+model0<- glmmTMB(seals ~ 1, data = full.data, 
+                 family = nbinom2, zi = ~ 1)
+summary(model0)
+model1<- glmmTMB(seals ~ noise*site + tide + time + (1 | date) +
+                        ar1(as.factor(month) + 0 | year), data = full.data, 
+                      family = nbinom2, zi = ~ 1)
 summary(model1) 
-model2<- gam(seals ~ s(noise, by = site) + s(month) + s(tide) + s(time), 
-                data = full.data, family = nbinom2(), method = "REML")
+model2<- glmmTMB(seals ~ noise*site +  (1 | date) + time +
+                   ar1(as.factor(month) + 0 | year), data = full.data, 
+                 family = nbinom2, zi = ~ 1)
 summary(model2) 
-model3<- gam(seals ~ s(noise, by = site) + s(month) + s(time), 
-             data = full.data, family = ziplss, method = "REML")
-summary(model3) 
-model4<- gam(seals ~ s(noise, by = site) + s(month), 
-             data = full.data, family = ziplss, method = "REML")
+model3<- glmmTMB(seals ~ noise*site + (1 | date) + 
+                   ar1(as.factor(month) + 0 | year), data = full.data, 
+                 family = nbinom2, zi = ~ 1)
 summary(model4) 
+model4<- glmmTMB(seals ~ noise+site + (1 | date) + 
+                   ar1(as.factor(month) + 0 | year), data = full.data, 
+                 family = nbinom2, zi = ~ 1)
+summary(model4)
 
 # Create list
-models<-list(model1, model2, model3, model4)
+models<-list(model0, model1, model2, model3, model4)
 
 ## Calculate AICc with glm of models
 Modnames<- c("seals ~ 1",
-             "seals ~ site*noise + month + tide + time",
-             "seals ~ site*noise + month + time",
-             "seals ~ site*noise + month")
+             "seals ~ site*noise + tide + time",
+             "seals ~ site*noise + time",
+             "seals ~ site*noise",
+             "seals ~ site+noise")
 
-qictable<- QIC(model1, model2, model3, model4)
 aictable<- aictab(models, modnames = Modnames,
                   second.ord = TRUE, 
-                  nobs = NULL, c.hat = 1) # Looks like site*noise + month + time are the best predictors
+                  nobs = NULL, c.hat = 1) # Looks like site*noise are the best predictors
 
 # Find significant predictors and summary of model3
-summary(model3)
+summary(model3) # noise between sites are significantly different
 
 
 ###########################################################################
