@@ -38,13 +38,18 @@ ggplot(full.mdata, aes(x=seals)) +
 var(full.mdata$seals)
 mean(full.mdata$seals)
 ### Variance is way higher than the mean
+## Choose quasipoisson due to high theta value
 
 ## Check if overdispersion is detected with full model
+mod<- glm(seals ~ noise, data = full.mdata, family = quasipoisson)
+
 check_overdispersion(mod) 
 
 ### Check if data is zero inflated 
 testZeroInflation(simulationOutput) 
 ### Data is zero-inflated
+
+
 
 ###########################################################################
 # PART 2: Run GLM and AICc ---------------------------------------------
