@@ -65,3 +65,6 @@ ggplot(newdata2, aes(noise, seals)) +
   labs(x = "Noise Level (dB)", y = "Predicted Number of Seals Hauled-out") +
   theme(panel.background = element_blank())
 
+
+###########################################################################
+# PART 5: Map---------------------------------------------

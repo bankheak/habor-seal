@@ -98,7 +98,7 @@ mean(full.data$seals)
 mod<- glmmTMB(seals ~ noise*site + (1 | month), data = full.data, 
         family = nbinom2, zi = ~ 1)
 summary(mod)
-simulationOutput <- simulateResiduals(fittedModel = model1)
+simulationOutput <- simulateResiduals(fittedModel = mod)
 
 # Test for homogeneity of variance
 testCategorical(simulationOutput, full.data$site)

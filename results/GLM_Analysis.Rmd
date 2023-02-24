@@ -33,18 +33,24 @@ ggplot(full.data, aes(x=seals)) +
 
 Negative binomial or poisson would be the best fit. Let's check if the mean is equal to the variance and if there is zero inflation.
 
-```{r choice, echo=TRUE}
-full.data<-read.csv("../data/full.data.csv")
-require(performance)
+```{r choice, echo=TRUE, message=FALSE, warning=FALSE}
+require(MASS) # for glm
+require(performance) # overdispersion
+require(DHARMa) # auto cor and zero-inflation
+
 
 var(full.data$seals)
 mean(full.data$seals)
 
-# Make sure overdispersion is detected with full model
+# Check poisson model
 mod<- glm(seals ~ site*noise + month + tide + time, data = full.data, family = "poisson")
+simulationOutput <- simulateResiduals(fittedModel = mod)
+
+# Check for overdispersion
 check_overdispersion(mod) 
 # Check for zero inflation
-check_zeroinflation(mod)
+testZeroInflation(simulationOutput) 
+
 ```
 
 The variance is way higher than the mean which was confirmed by the Pearson chi-squared test. Additionally there was zero-inflation present in the model. Therefore the Poisson distribution is not applicable here and we will continue with the negative binomial distribution.
@@ -52,7 +58,6 @@ The variance is way higher than the mean which was confirmed by the Pearson chi-
 ## Check for autocorrelation
 
 ```{r auto, echo=FALSE}
-full.data<- read.csv("../data/full.data.csv")
 require(glmmTMB) # for glmm
 require(DHARMa) # auto cor and zero-inflation
 
@@ -62,8 +67,7 @@ acf(full.data$seals[full.data$site == "waterfront"]) # Highly autocorrelated at 
 acf(full.data$seals[full.data$site == "marina"]) # Autocorrelated at lag of 6
 
 # Correct for autocorrelation with ar1()
-fittedModel<- glmmTMB(seals ~ noise*site + tide + time + (1 | date) +
-                          ar1(as.factor(month) + 0 | year), data = full.data, 
+fittedModel<- glmmTMB(seals ~ noise*site + tide + time + (1 | date) + ar1(as.factor(month) + 0 | year), data = full.data, 
         family = nbinom2, zi = ~ 1)
 res = simulateResiduals(fittedModel)
 testTemporalAutocorrelation(res, time = unique(full.data$obs_id))
@@ -77,7 +81,6 @@ The x-axis corresponds to the different lags of the residuals. The y-axis shows 
 To test whether noise affects the number of seals hauled-out by site, I will insert an interaction between noise level and site.
 
 ```{r glm, echo=FALSE, message=FALSE, warning=FALSE}
-full.data<-read.csv("../data/full.data.csv")
 # Load packages
 require(glmmTMB) # for glmm
 require(AICcmodavg) #for AICc
@@ -85,19 +88,23 @@ require(AICcmodavg) #for AICc
 model0<- glmmTMB(seals ~ 1, data = full.data, 
                  family = nbinom2, zi = ~ 1)
 model1<- glmmTMB(seals ~ noise*site + tide + time + (1 | date) +
-                        ar1(as.factor(month) + 0 | year), data = full.data, family = nbinom2, zi = ~ 1)
+                        ar1(as.factor(month) + 0 | year), data =                           full.data, family = nbinom2, zi = ~ 1)
 model2<- glmmTMB(seals ~ noise*site +  (1 | date) + time +
-                   ar1(as.factor(month) + 0 | year), data = full.data, family = nbinom2, zi = ~ 1)
+                   ar1(as.factor(month) + 0 | year), data =                                full.data, family = nbinom2, zi = ~ 1)
 model3<- glmmTMB(seals ~ noise*site + (1 | date) + 
-                   ar1(as.factor(month) + 0 | year), data = full.data, family = nbinom2, zi = ~ 1)
+                   ar1(as.factor(month) + 0 | year), data =                               full.data, family = nbinom2, zi = ~ 1)
+model4<- glmmTMB(seals ~ noise+site + (1 | date) + 
+                   ar1(as.factor(month) + 0 | year), data =                               full.data, family = nbinom2, zi = ~ 1)
+
 # Create list
-models<-list(model0, model1, model2, model3)
+models<-list(model0, model1, model2, model3, model4)
 
 ## Calculate AICc with glm of models
 Modnames<- c("seals ~ 1",
              "seals ~ site*noise + tide + time",
              "seals ~ site*noise + time",
-             "seals ~ site*noise")
+             "seals ~ site*noise",
+             "seals ~ site+noise")
 
 aictab(models, modnames = Modnames,
                   second.ord = TRUE, 
@@ -108,41 +115,16 @@ aictab(models, modnames = Modnames,
 
 Looks like the best model will contain month, noise, site and time as predictors. This is the summary of that model:
 
-```{r model, echo=FALSE}
-full.data<-read.csv("../data/full.data.csv")
-# Load packages
-require(glmmTMB) # for glmm
-
-model3<- glmmTMB(seals ~ noise*site + (1 | date) + 
-                   ar1(as.factor(month) + 0 | year), data = full.data, family = nbinom2, zi = ~ 1)
+```{r model, echo=FALSE, message=FALSE, warning=FALSE}
 summary(model3) 
 ```
 
-* Month and time are significant predictors for how many harbor seals haul-out.
+* Despite what the p-values show, since and interaction between site and noise were chosen over the other models we will say that the effect of noise on the number of seals haul-out depends on what site they are located in.
 
-* Site and noise are significant predictors for the number of harbor seals hauled-out. The effect of noise on the number of seals haul-out depends on what site they are located in.
-
-```{r interact, echo=FALSE, message=FALSE, warning=FALSE}
-full.data<-read.csv("../data/full.data.csv")
-
-# What does the interaction between site and noise look like?
-interaction.plot(x.factor = full.data$noise, #x-axis variable
-                 trace.factor = full.data$site, #variable for lines
-                 response = full.data$seals, #y-axis variable
-                 fun = median, #metric to plot
-                 ylab = "Number of Seals Hauled-out",
-                 xlab = "Noise Level (dB)",
-                 col = c("pink", "blue"),
-                 lty = 1, #line type
-                 lwd = 2, #line width
-                 trace.label = "Site")
-```
 
 ## Use model output to predict response variable
 
 ```{r predict, echo=FALSE}
-full.data<-read.csv("../data/full.data.csv")
-
 newdata <- data.frame(noise = mean(full.data$noise), 
                        site = factor(1:2, levels = 1:2, 
                                       labels = unique(full.data$site)))
@@ -156,16 +138,6 @@ In the output above, we see that the predicted number of seals hauled-out for th
 Below we will obtain the mean predicted number of seals hauled-out for values of noise across its entire range for each site and graph these.
 
 ```{r range, echo=FALSE, message=FALSE, warning=FALSE}
-full.data<-read.csv("../data/full.data.csv")
-require(ggplot2)
-
-# Use model to predict the response variable 
-newdata <- data.frame(noise = mean(full.data$noise), 
-                       site = factor(1:2, levels = 1:2, 
-                                      labels = unique(full.data$site)))
-m3<- glm.nb(seals ~ site * noise, data = full.data)
-newdata$phat <- predict.glm(m3, newdata, type = "response")
-newdata
 
 # Plot 
 newdata2 <- data.frame(
