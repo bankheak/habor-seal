@@ -18,6 +18,7 @@ require(AICcmodavg) #for AICc
 require(glmmTMB) # for glmm
 require(MASS) # for glm
 require(DHARMa) # auto cor and zero-inflation
+require(HH) # VIF
 
 
 ###########################################################################
@@ -76,14 +77,6 @@ full.data<- full.data[order(full.data$obs_id), ]
 write.csv(full.data,"full.data.csv")
 full.data<- read.csv("full.data.csv")
 
-# Run pairwise cor between all independent variables
-## Cut-off is +/- 0.7
-cor.matrix<-cor(full.data[,c(2:4,6:7,9)]) 
-# Keep only large correlations in the same model
-cor.matrix[abs(cor.matrix)< 0.7]<-NA
-cor.matrix
-## No colilinearity
-
 # Check distribution
 ggplot(full.data, aes(x=seals)) + 
   geom_histogram(aes(y=..density..), colour="black", fill="white")+
@@ -95,20 +88,6 @@ mean(full.data$seals)
 ### Variance is way higher than the mean
 
 ## Negative binomial or poisson would be the best fit
-mod<- glmmTMB(seals ~ noise*site + (1 | month), data = full.data, 
-        family = nbinom2, zi = ~ 1)
-summary(mod)
-simulationOutput <- simulateResiduals(fittedModel = mod)
-
-# Test for homogeneity of variance
-testCategorical(simulationOutput, full.data$site)
-
-## Check if overdispersion is detected with full model
-check_overdispersion(mod) 
-
-### Check if data is zero inflated 
-testZeroInflation(simulationOutput) 
-### Data is zero-inflated
 
 # Check Temporal Autocorrelation
 ## Run acf for both direct and indirect effects
@@ -127,6 +106,23 @@ fittedModel<- glmmTMB(seals ~ noise*site + tide + time + (1 | date) +
 res = simulateResiduals(fittedModel)
 testTemporalAutocorrelation(res, time = unique(full.data$obs_id))
 
+# Test for homogeneity of variance
+testCategorical(res, full.data$site)
+
+## Check if overdispersion is detected with full model
+check_overdispersion(fittedModel) 
+
+### Check if data is zero inflated 
+testZeroInflation(res) 
+### Data is zero-inflated
+
+# Run pairwise cor between all independent variables
+## Cut-off is +/- 0.7
+cor.matrix<-cor(full.data[,c(2:4,6:7,9)]) 
+# Keep only large correlations in the same model
+cor.matrix[abs(cor.matrix)< 0.7]<-NA
+cor.matrix
+## No colilinearity
 
 ###########################################################################
 # PART 3: Run glmmTMB and AICc---------------------------------------------
