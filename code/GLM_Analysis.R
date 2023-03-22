@@ -100,8 +100,8 @@ plot(full.data$month, fit1$res, pch=20, col="blue")
 abline(h=0) # Add the horizontal line at 0
 
 # Correct for autocorrelation with ar1()
-fittedModel<- glmmTMB(seals ~ noise*site + tide + time + (1 | date) +
-                          ar1(as.factor(j.date) + 0 | month), data = full.data, 
+fittedModel<- glmmTMB(seals ~ noise*site + tide + time +
+                          ar1(as.factor(month) + 0 | year), data = full.data, 
         family = nbinom2, zi = ~ 1)
 res = simulateResiduals(fittedModel)
 testTemporalAutocorrelation(res, time = unique(full.data$obs_id))
@@ -131,19 +131,19 @@ cor.matrix
 model0<- glmmTMB(seals ~ 1, data = full.data, 
                  family = nbinom2, zi = ~ 1)
 summary(model0)
-model1<- glmmTMB(seals ~ noise*site + tide + time + (1 | date) +
+model1<- glmmTMB(seals ~ noise*site + tide + time +
                         ar1(as.factor(month) + 0 | year), data = full.data, 
                       family = nbinom2, zi = ~ 1)
 summary(model1) 
-model2<- glmmTMB(seals ~ noise*site +  (1 | date) + time +
+model2<- glmmTMB(seals ~ noise*site + time +
                    ar1(as.factor(month) + 0 | year), data = full.data, 
                  family = nbinom2, zi = ~ 1)
 summary(model2) 
-model3<- glmmTMB(seals ~ noise*site + (1 | date) + 
+model3<- glmmTMB(seals ~ noise*site + 
                    ar1(as.factor(month) + 0 | year), data = full.data, 
                  family = nbinom2, zi = ~ 1)
 summary(model4) 
-model4<- glmmTMB(seals ~ noise+site + (1 | date) + 
+model4<- glmmTMB(seals ~ noise+site + 
                    ar1(as.factor(month) + 0 | year), data = full.data, 
                  family = nbinom2, zi = ~ 1)
 summary(model4)
