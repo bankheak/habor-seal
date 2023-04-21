@@ -15,7 +15,11 @@ newdata2<- read.csv("newdata2")
 
 # Load packages
 require(ggplot2)
+library(ggpubr)
+theme_set(theme_pubr())
 require(MASS)
+library(hrbrthemes)
+library(viridis)
 
 ###########################################################################
 # PART 1: Distribution---------------------------------------------
@@ -30,7 +34,7 @@ ggplot(full.data, aes(x=seals)) +
 
 ## Waterfront
 p<-ggplot(new.w.data, aes(x=month,y =seals,group=month))
-a<- p+geom_boxplot(fill="black", alpha=0.2) +
+a<- p+geom_boxplot(fill="blue", alpha=0.2) +
   xlab("Month")+ylab("Number of Seals Hauled-out")+
   theme(panel.background = element_blank())
 a + scale_x_discrete(limits = c(6,7,8,9,10,11),
@@ -38,21 +42,24 @@ a + scale_x_discrete(limits = c(6,7,8,9,10,11),
 
 ## Marina
 j<-ggplot(m.data, aes(x=month,y =seals,group=month))
-k<- j+geom_boxplot(fill="black", alpha=0.2)+
+k<- j+geom_boxplot(fill="#F8766D", alpha=0.2)+
   xlab("Month")+ylab("Number of Seals Hauled-out")+
   theme(panel.background = element_blank())
 k + scale_x_discrete(limits = c(6,7,8,9,10,11),
                      labels=c("Jun", "Jul", "Aug", "Sept", "Oct", "Nov"))
 
+figure<- ggarrange(a, k,
+          labels = c("A", "B"),
+          ncol = 1, nrow = 2)
 
 ###########################################################################
 # PART 3: Noise graph---------------------------------------------
 
 x.order <- c('Waterfront', 'Marina')
-ggplot(full.data, aes(x = site, y = noise)) +
-  geom_violin(fill = "grey") + geom_boxplot(width = .2) +
+ggplot(full.data, aes(x = site, y = noise, fill = site)) +
+  geom_violin() + geom_boxplot(width = .2) +
   xlab("Site")+ylab("Average Noise Level (dB)") +
-  scale_x_discrete(limit = c("waterfront", "marina"),labels = c("Waterfront","Marina")) +
+  scale_x_discrete(limit = c("waterfront", "marina"),labels = c("waterfront","marina")) +
   theme(panel.background = element_blank())
 
 
@@ -65,6 +72,3 @@ ggplot(newdata2, aes(noise, seals)) +
   labs(x = "Noise Level (dB)", y = "Predicted Number of Seals Hauled-out") +
   theme(panel.background = element_blank())
 
-
-###########################################################################
-# PART 5: Map---------------------------------------------

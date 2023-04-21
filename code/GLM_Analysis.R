@@ -177,6 +177,18 @@ m3<- glm.nb(seals ~ site * noise, data = full.data)
 newdata$phat <- predict.glm(m3, newdata, type = "response")
 newdata
 
+# Interaction plot
+interaction.plot(x.factor = full.data$noise, #x-axis variable
+                 trace.factor = full.data$site, #variable for lines
+                 response = full.data$seals, #y-axis variable
+                 fun = median, #metric to plot
+                 ylab = "Number of Seals Hauled-out",
+                 xlab = "Noise Level (dB)",
+                 col = c("pink", "blue"),
+                 lty = 1, #line type
+                 lwd = 2, #line width
+                 trace.label = "Site")
+
 # Plot 
 newdata2 <- data.frame(
   noise = rep(seq(from = min(full.data$noise), to = max(full.data$noise), length.out = 100), 2),
@@ -194,6 +206,6 @@ write.csv(newdata2, "newdata2.csv")
 
 ggplot(newdata2, aes(noise, seals)) +
   geom_ribbon(aes(ymin = LL, ymax = UL, fill = site), alpha = .25) +
-  geom_line(aes(colour = site), linewidth = 2) +
-  labs(x = "Noise Level (dB)", y = "Predicted Number of Seals Hauled-out")
-
+  geom_line(aes(colour = site, linetype = site), linewidth = 1) +
+  labs(x = "Noise Level (dB)", y = "Predicted Number of Seals Hauled-out") +
+  theme(panel.background = element_blank())
